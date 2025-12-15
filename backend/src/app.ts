@@ -5,6 +5,8 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import { PrismaClient } from '@prisma/client';
+import swaggerUi from 'swagger-ui-express';
+import { swaggerSpec } from './swagger.js';
 
 // Load environment variables
 dotenv.config();
@@ -29,7 +31,9 @@ const PORT = process.env.PORT || 4000;
 export const prisma = new PrismaClient();
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+    contentSecurityPolicy: false // Disable for Swagger UI
+}));
 app.use(cors({
     origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003'],
     credentials: true
@@ -45,6 +49,12 @@ const limiter = rateLimit({
     message: { error: 'Too many requests, please try again later.' }
 });
 app.use('/api', limiter);
+
+// Swagger API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'Health Card API Docs'
+}));
 
 // Health check endpoint
 app.get('/health', (_req: Request, res: Response) => {
@@ -88,6 +98,7 @@ async function startServer() {
         app.listen(PORT, () => {
             console.log(`🚀 Server running on http://localhost:${PORT}`);
             console.log(`📚 Health check: http://localhost:${PORT}/health`);
+            console.log(`📖 Swagger API Docs: http://localhost:${PORT}/docs`);
         });
     } catch (error) {
         console.error('❌ Failed to start server:', error);
