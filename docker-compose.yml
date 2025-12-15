@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: health_card_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: health_card_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin123}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - health_card_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: health_card_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    networks:
+      - health_card_network
+
+  backend:
+    build: ./backend
+    container_name: health_card_backend
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      NODE_ENV: production
+      PORT: 4000
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD:-healthcard123}@postgres:5432/health_card_db
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+    networks:
+      - health_card_network
+
+  admin-panel:
+    build: ./admin-panel
+    container_name: health_card_admin
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:4000/api
+    networks:
+      - health_card_network
+
+  lab-portal:
+    build: ./lab-portal
+    container_name: health_card_lab
+    restart: unless-stopped
+    ports:
+      - "3002:3000"
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:4000/api
+    networks:
+      - health_card_network
+
+  user-portal:
+    build: ./user-portal
+    container_name: health_card_user
+    restart: unless-stopped
+    ports:
+      - "3003:3000"
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://backend:4000/api
+    networks:
+      - health_card_network
+
+networks:
+  health_card_network:
+    driver: bridge
+
+volumes:
+  postgres_data:

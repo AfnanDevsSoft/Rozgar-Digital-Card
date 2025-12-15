@@ -1,0 +1,206 @@
+// Prisma Schema for Digital Health Card System
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum Role {
+  SUPER_ADMIN
+  BRANCH_ADMIN
+  RECEPTIONIST
+  USER
+}
+
+enum CardStatus {
+  ACTIVE
+  INACTIVE
+  EXPIRED
+  LOST
+}
+
+enum LabStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum ReportStatus {
+  PENDING
+  UPLOADED
+  DELIVERED
+}
+
+// Admin model - for Super Admin and Branch Admin
+model Admin {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  password_hash String
+  name          String
+  role          Role     @default(BRANCH_ADMIN)
+  lab_id        String?
+  lab           Lab?     @relation(fields: [lab_id], references: [id])
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@map("admins")
+}
+
+// User model - card holders
+model User {
+  id            String        @id @default(uuid())
+  name          String
+  email         String        @unique
+  phone         String
+  cnic          String        @unique
+  address       String?
+  dob           DateTime?
+  gender        String?
+  blood_group   String?
+  password_hash String
+  is_active     Boolean       @default(true)
+  created_at    DateTime      @default(now())
+  updated_at    DateTime      @updatedAt
+
+  health_card   HealthCard?
+  transactions  Transaction[]
+  reports       Report[]
+
+  @@map("users")
+}
+
+// Health Card model
+model HealthCard {
+  id            String     @id @default(uuid())
+  serial_number String     @unique // DCD2512345678
+  user_id       String     @unique
+  user          User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  status        CardStatus @default(ACTIVE)
+  issue_date    DateTime   @default(now())
+  expiry_date   DateTime
+  created_at    DateTime   @default(now())
+  updated_at    DateTime   @updatedAt
+
+  transactions Transaction[]
+
+  @@map("health_cards")
+}
+
+// Lab model
+model Lab {
+  id            String    @id @default(uuid())
+  lab_code      String    @unique
+  name          String
+  address       String
+  phone         String
+  email         String
+  license_no    String?
+  discount_rate Decimal   @default(30.00) @db.Decimal(5, 2)
+  status        LabStatus @default(ACTIVE)
+  created_at    DateTime  @default(now())
+  updated_at    DateTime  @updatedAt
+
+  admins       Admin[]
+  staff        LabStaff[]
+  tests        TestCatalog[]
+  transactions Transaction[]
+  reports      Report[]
+
+  @@map("labs")
+}
+
+// Lab Staff model (Receptionists)
+model LabStaff {
+  id            String   @id @default(uuid())
+  lab_id        String
+  lab           Lab      @relation(fields: [lab_id], references: [id], onDelete: Cascade)
+  name          String
+  email         String   @unique
+  password_hash String
+  is_active     Boolean  @default(true)
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+
+  @@map("lab_staff")
+}
+
+// Test Catalog model
+model TestCatalog {
+  id        String   @id @default(uuid())
+  lab_id    String
+  lab       Lab      @relation(fields: [lab_id], references: [id], onDelete: Cascade)
+  name      String
+  category  String
+  price     Decimal  @db.Decimal(10, 2)
+  is_active Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("test_catalogs")
+}
+
+// Transaction model
+model Transaction {
+  id                  String     @id @default(uuid())
+  receipt_number      String     @unique // INV-2024-00001
+  user_id             String
+  user                User       @relation(fields: [user_id], references: [id])
+  health_card_id      String
+  health_card         HealthCard @relation(fields: [health_card_id], references: [id])
+  lab_id              String
+  lab                 Lab        @relation(fields: [lab_id], references: [id])
+  test_name           String
+  original_amount     Decimal    @db.Decimal(10, 2)
+  discount_percentage Decimal    @db.Decimal(5, 2)
+  discount_amount     Decimal    @db.Decimal(10, 2)
+  final_amount        Decimal    @db.Decimal(10, 2)
+  created_at          DateTime   @default(now())
+
+  reports Report[]
+
+  @@map("transactions")
+}
+
+// Report model
+model Report {
+  id             String       @id @default(uuid())
+  transaction_id String
+  transaction    Transaction  @relation(fields: [transaction_id], references: [id])
+  user_id        String
+  user           User         @relation(fields: [user_id], references: [id])
+  lab_id         String
+  lab            Lab          @relation(fields: [lab_id], references: [id])
+  file_name      String
+  file_url       String
+  file_type      String
+  file_size      Int
+  status         ReportStatus @default(PENDING)
+  uploaded_at    DateTime     @default(now())
+
+  @@map("reports")
+}
+
+// Discount Settings model
+model DiscountSettings {
+  id                    String   @id @default(uuid())
+  default_discount_rate Decimal  @default(30.00) @db.Decimal(5, 2)
+  apply_to_expired      Boolean  @default(false)
+  updated_at            DateTime @updatedAt
+
+  @@map("discount_settings")
+}
+
+// Receipt Counter for sequential receipt numbers
+model ReceiptCounter {
+  id    String @id @default(uuid())
+  year  Int    @unique
+  count Int    @default(0)
+
+  @@map("receipt_counters")
+}

@@ -1,0 +1,27 @@
+{
+  "name": "rozzgar-health-card-system",
+  "version": "1.0.0",
+  "description": "Digital Health Card & Lab Management System",
+  "private": true,
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../admin-panel && npm install && cd ../lab-portal && npm install && cd ../user-portal && npm install",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:admin\" \"npm run dev:lab\" \"npm run dev:user\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:admin": "cd admin-panel && npm run dev",
+    "dev:lab": "cd lab-portal && npm run dev",
+    "dev:user": "cd user-portal && npm run dev",
+    "build:all": "npm run build:backend && npm run build:admin && npm run build:lab && npm run build:user",
+    "build:backend": "cd backend && npm run build",
+    "build:admin": "cd admin-panel && npm run build",
+    "build:lab": "cd lab-portal && npm run build",
+    "build:user": "cd user-portal && npm run build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "author": "Afnan Devs",
+  "license": "ISC"
+}

@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Health Card & Lab Management System - Architecture v2.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.7;
+            color: #1f2937;
+            background: #ffffff;
+            padding: 40px 60px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a73e8;
+            text-align: center;
+            margin-bottom: 10px;
+            border-bottom: 4px solid #1a73e8;
+            padding-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #059669;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #059669;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #dc2626;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+
+        h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #7c3aed;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .version {
+            text-align: center;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 8px 16px;
+            border-radius: 20px;
+            display: inline-block;
+            margin: 0 auto 20px;
+            font-weight: 600;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: white;
+            font-weight: 600;
+            padding: 14px 16px;
+            text-align: left;
+        }
+
+        td {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        tr:hover {
+            background-color: #eff6ff;
+        }
+
+        .mermaid {
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 25px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .success-box {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            border-left: 5px solid #22c55e;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+
+        .success-box h4 {
+            color: #166534;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .warning-box {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border-left: 5px solid #f59e0b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+
+        .warning-box h4 {
+            color: #b45309;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        .note-box {
+            background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+            border-left: 5px solid #3b82f6;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .discount-box {
+            background: linear-gradient(135deg, #fdf4ff, #f5d0fe);
+            border-left: 5px solid #a855f7;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 25px 0;
+        }
+
+        .discount-box h4 {
+            color: #7e22ce;
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+
+        code {
+            background: #f1f5f9;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #be185d;
+        }
+
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            margin: 20px 0;
+        }
+
+        hr {
+            border: none;
+            border-top: 2px solid #e5e7eb;
+            margin: 40px 0;
+        }
+
+        .page-break {
+            page-break-before: always;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge-red {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .badge-green {
+            background: #dcfce7;
+            color: #16a34a;
+        }
+
+        .badge-blue {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .badge-purple {
+            background: #f3e8ff;
+            color: #9333ea;
+        }
+
+        .footer {
+            margin-top: 60px;
+            padding-top: 20px;
+            border-top: 2px solid #e5e7eb;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.85rem;
+        }
+
+        @media print {
+            body {
+                padding: 20px 40px;
+            }
+
+            .mermaid,
+            table {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Digital Health Card & Lab Management System</h1>
+    <p class="subtitle">Complete Architecture & Flow Documentation</p>
+    <p class="center"><span class="version">📌 Version 2.0 - Updated</span></p>
+
+    <hr>
+
+    <h2>📊 System Architecture Overview</h2>
+    <div class="mermaid">
+        graph TB
+        subgraph "Frontend Applications"
+        WEB["🖥️ Web Admin Panel<br />(React.js)"]
+        LAB["🔬 Lab Management Portal<br />(React.js)"]
+        end
+
+        subgraph "Backend Services"
+        API["⚙️ Node.js/Express API"]
+        AUTH["🔐 Authentication Service"]
+        DISCOUNT["💰 Discount Calculation Engine"]
+        NOTIF["🔔 Notification Service"]
+        end
+
+        subgraph "Data Layer"
+        PG["🐘 PostgreSQL Database"]
+        REDIS["⚡ Redis Cache"]
+        STORAGE["📁 Hetzner File Storage"]
+        end
+
+        subgraph "External Services"
+        SMS["📨 SMS Gateway"]
+        EMAIL["✉️ Email Service"]
+        CDN["🌐 Hetzner CDN"]
+        end
+
+        WEB --> API
+        LAB --> API
+
+        API --> AUTH
+        API --> DISCOUNT
+        API --> NOTIF
+
+        API --> PG
+        API --> REDIS
+        API --> STORAGE
+
+        API --> SMS
+        API --> EMAIL
+        STORAGE --> CDN
+    </div>
+
+    <hr>
+
+    <h2>🎯 Core Business Flow</h2>
+    <div class="mermaid">
+        flowchart TD
+        START((Start)) --> REG[Admin Registers New User]
+        REG --> SERIAL[Generate Unique Serial Number]
+        SERIAL --> CARD[Create Health Card with Serial]
+        CARD --> DELIVER[Deliver Card to User]
+
+        DELIVER --> VISIT[User Visits Partner Lab]
+        VISIT --> LOOKUP{Lab Enters Serial Number}
+        LOOKUP --> VERIFY[System Validates Card]
+        VERIFY --> |Valid| DISPLAY[Display User Details]
+        VERIFY --> |Invalid| REJECT[Reject - Invalid Card]
+
+        DISPLAY --> TEST[Lab Enters Test Details]
+        TEST --> PRICE[Enter Original Price]
+        PRICE --> CALC[System Calculates 30% Discount]
+        CALC --> BILL[Generate Discounted Bill]
+        BILL --> PAY[User Pays Final Amount]
+
+        PAY --> RESULT[Lab Processes Tests]
+        RESULT --> UPLOAD[Lab Uploads Reports]
+        UPLOAD --> NOTIFY[SMS/Email Notification to User]
+        NOTIFY --> ACCESS[User Accesses Reports via Web Portal]
+
+        REJECT --> END1((End))
+        ACCESS --> END2((End))
+
+        style START fill:#4CAF50
+        style END1 fill:#f44336
+        style END2 fill:#2196F3
+        style CALC fill:#FF9800
+        style NOTIFY fill:#9C27B0
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>🏛️ Database Entity Relationship Diagram</h2>
+    <div class="mermaid">
+        erDiagram
+        USERS ||--o{ HEALTH_CARDS : has
+        USERS ||--o{ TRANSACTIONS : makes
+        USERS ||--o{ REPORTS : receives
+
+        LABS ||--o{ TRANSACTIONS : processes
+        LABS ||--o{ REPORTS : uploads
+        LABS ||--o{ LAB_STAFF : employs
+        LABS ||--o{ TEST_CATALOG : offers
+
+        TRANSACTIONS ||--o{ REPORTS : generates
+
+        ADMINS ||--o{ LABS : manages
+
+        USERS {
+        uuid id PK
+        string name
+        string email
+        string phone
+        string cnic
+        date dob
+        }
+
+        HEALTH_CARDS {
+        uuid id PK
+        uuid user_id FK
+        string serial_number UK
+        enum status
+        date expiry_date
+        }
+
+        LABS {
+        uuid id PK
+        string name
+        string address
+        decimal discount_rate
+        enum status
+        }
+
+        TRANSACTIONS {
+        uuid id PK
+        uuid user_id FK
+        uuid lab_id FK
+        string test_name
+        decimal original_amount
+        decimal discount_amount
+        decimal final_amount
+        }
+
+        REPORTS {
+        uuid id PK
+        uuid transaction_id FK
+        string file_url
+        enum status
+        }
+    </div>
+
+    <hr>
+
+    <h2>✅ Included Features</h2>
+    <div class="success-box">
+        <h4>✅ The following features are INCLUDED in this implementation</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Component</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Automatic Discount Calculation (30%)</strong></td>
+                    <td>Lab Portal - Test Entry</td>
+                    <td><span class="badge badge-green">✅ INCLUDED</span></td>
+                </tr>
+                <tr>
+                    <td>Serial Number Based Verification</td>
+                    <td>Lab Portal</td>
+                    <td><span class="badge badge-green">✅ INCLUDED</span></td>
+                </tr>
+                <tr>
+                    <td>SMS/Email Notifications</td>
+                    <td>Backend Services</td>
+                    <td><span class="badge badge-green">✅ INCLUDED</span></td>
+                </tr>
+                <tr>
+                    <td>User Web Portal for Reports</td>
+                    <td>Web Application</td>
+                    <td><span class="badge badge-green">✅ INCLUDED</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <h2>🚫 Excluded Features</h2>
+    <div class="warning-box">
+        <h4>⚠️ The following features are EXCLUDED from this implementation</h4>
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Originally Planned In</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>QR Code Generation & Scanning</td>
+                    <td>Admin Panel / Lab Portal</td>
+                    <td><span class="badge badge-red">❌ REMOVED</span></td>
+                </tr>
+                <tr>
+                    <td>Mobile Applications (iOS & Android)</td>
+                    <td>User-facing Apps</td>
+                    <td><span class="badge badge-red">❌ REMOVED</span></td>
+                </tr>
+                <tr>
+                    <td>Multiple Test Entries in Single Transaction</td>
+                    <td>Lab Portal - Test Entry</td>
+                    <td><span class="badge badge-red">❌ EXCLUDED</span></td>
+                </tr>
+                <tr>
+                    <td>Revenue Dashboard</td>
+                    <td>Lab Dashboard</td>
+                    <td><span class="badge badge-red">❌ EXCLUDED</span></td>
+                </tr>
+                <tr>
+                    <td>Commission Calculation</td>
+                    <td>Lab Dashboard</td>
+                    <td><span class="badge badge-red">❌ EXCLUDED</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>💰 Discount Calculation Module</h2>
+
+    <div class="discount-box">
+        <h4>💰 Automatic 30% Discount Calculation</h4>
+        <p>The system automatically calculates and applies a 30% discount on all tests for valid health card holders.
+        </p>
+    </div>
+
+    <div class="mermaid">
+        flowchart LR
+        A[Original Test Price] --> B{Card Valid?}
+        B -->|Yes| C[Get Discount Rate: 30%]
+        C --> D[Calculate Discount Amount]
+        D --> E[Original x 0.30]
+        E --> F[Subtract from Original]
+        F --> G[Final Amount]
+        G --> H[Display on Bill]
+
+        B -->|No| I[No Discount]
+        I --> J[Pay Full Amount]
+
+        style C fill:#4CAF50
+        style E fill:#FF9800
+        style G fill:#2196F3
+    </div>
+
+    <h3>Discount Formula</h3>
+    <pre>
+Discount Amount = Original Price × (Discount Rate / 100)
+Final Amount = Original Price - Discount Amount
+
+Example Calculation:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Original Price     : Rs. 1,000
+  Discount Rate      : 30%
+  Discount Amount    : Rs. 1,000 × 0.30 = Rs. 300
+  ━━━━━━━━━━━━━━━━━━━━━━━━
+  Final Amount       : Rs. 1,000 - Rs. 300 = Rs. 700
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    </pre>
+
+    <hr>
+
+    <h2>📱 Module Breakdown</h2>
+
+    <h3>1. Web Admin Panel Modules</h3>
+    <div class="mermaid">
+        graph LR
+        subgraph "Admin Panel"
+        A1[User Registration]
+        A2[Card Generation]
+        A3[Lab Management]
+        A4[Dashboard]
+        A5[Settings]
+        end
+
+        A1 --> A1a[Personal Details]
+        A1 --> A1b[Batch Registration]
+
+        A2 --> A2a[Serial Number Gen]
+        A2 --> A2b[Card Status]
+        A2 --> A2c[Print Card]
+
+        A3 --> A3a[Lab Registration]
+        A3 --> A3b[Lab Approval]
+        A3 --> A3c[Transaction History]
+
+        A4 --> A4a[User Stats]
+        A4 --> A4b[Lab Stats]
+        A4 --> A4c[Reports]
+
+        A5 --> A5a[Discount Rate Config]
+        A5 --> A5b[Access Control]
+    </div>
+
+    <h3>2. Lab Management Portal Modules</h3>
+    <div class="mermaid">
+        graph LR
+        subgraph "Lab Portal"
+        L1[User Verification]
+        L2[Test Entry]
+        L3[Report Management]
+        L4[Dashboard]
+        end
+
+        L1 --> L1a[Serial Lookup]
+        L1 --> L1b[Card Validation]
+        L1 --> L1c[User Display]
+
+        L2 --> L2a[Test Catalog]
+        L2 --> L2b[Price Entry]
+        L2 --> L2c[Auto Discount 30%]
+        L2 --> L2d[Bill Generation]
+
+        L3 --> L3a[Upload Reports]
+        L3 --> L3b[Status Tracking]
+        L3 --> L3c[Bulk Upload]
+
+        L4 --> L4a[Daily Summary]
+        L4 --> L4b[Pending Reports]
+    </div>
+
+    <div class="note-box">
+        <strong>💡 Note:</strong> The discount is automatically calculated when a test is selected. Lab staff only
+        enters the original price.
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>🔄 User Journey Flowcharts</h2>
+
+    <h3>A. New User Registration Flow</h3>
+    <div class="mermaid">
+        sequenceDiagram
+        participant Admin
+        participant System
+        participant Database
+        participant User
+
+        Admin->>System: Enter User Details
+        System->>Database: Create User Record
+        Database-->>System: User ID Generated
+        System->>System: Generate Unique Serial Number
+        System->>Database: Store Card Details
+        System-->>Admin: Card Ready for Print
+        Admin->>User: Deliver Physical Card
+    </div>
+
+    <h3>B. Lab Visit & Discount Flow</h3>
+    <div class="mermaid">
+        sequenceDiagram
+        participant User
+        participant Lab
+        participant System
+        participant Discount
+        participant DB as Database
+
+        User->>Lab: Show Card Serial
+        Lab->>System: Enter Serial
+        System->>DB: Validate Card
+        DB-->>System: Card Valid
+        System-->>Lab: Show User Info
+        Lab->>System: Select Test
+        System-->>Lab: Original Price
+        System->>Discount: Calculate 30%
+        Discount-->>System: Discount Amount
+        System-->>Lab: Final Bill
+        System->>DB: Save Transaction
+        Lab-->>User: Receipt
+    </div>
+
+    <h3>C. Report Notification Flow</h3>
+    <div class="mermaid">
+        sequenceDiagram
+        participant Lab
+        participant System
+        participant Storage
+        participant SMS
+        participant Email
+        participant User
+
+        Lab->>System: Upload Report
+        System->>Storage: Store File
+        Storage-->>System: File URL
+        System->>SMS: Send Notification
+        System->>Email: Send Email
+        SMS-->>User: Report Ready SMS
+        Email-->>User: Report Link Email
+        User->>System: Login Web Portal
+        System-->>User: Download Report
+    </div>
+
+    <div class="page-break"></div>
+
+    <h2>📁 Project Structure</h2>
+    <pre>
+rozzgar-digital-health/
+├── backend/
+│   ├── src/
+│   │   ├── controllers/
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── user.controller.ts
+│   │   │   ├── card.controller.ts
+│   │   │   ├── lab.controller.ts
+│   │   │   ├── transaction.controller.ts
+│   │   │   ├── discount.controller.ts    ← NEW
+│   │   │   └── report.controller.ts
+│   │   ├── services/
+│   │   │   ├── discount.service.ts       ← NEW
+│   │   │   ├── notification.service.ts
+│   │   │   └── storage.service.ts
+│   │   └── routes/
+│   ├── prisma/
+│   │   └── schema.prisma
+│   └── package.json
+│
+├── admin-panel/        # React.js Admin Panel
+│   └── src/
+│
+└── lab-portal/         # React.js Lab Portal
+    └── src/
+    </pre>
+
+    <hr>
+
+    <h2>📋 API Endpoints</h2>
+
+    <h3>Authentication</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Method</th>
+                <th>Endpoint</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge badge-green">POST</span></td>
+                <td><code>/api/auth/admin/login</code></td>
+                <td>Admin login</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-green">POST</span></td>
+                <td><code>/api/auth/lab/login</code></td>
+                <td>Lab staff login</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-green">POST</span></td>
+                <td><code>/api/auth/user/login</code></td>
+                <td>User web portal login</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Users & Cards</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Method</th>
+                <th>Endpoint</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge badge-green">POST</span></td>
+                <td><code>/api/users</code></td>
+                <td>Register new user</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-blue">GET</span></td>
+                <td><code>/api/users</code></td>
+                <td>List all users</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-green">POST</span></td>
+                <td><code>/api/cards/generate</code></td>
+                <td>Generate health card</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-blue">GET</span></td>
+                <td><code>/api/cards/verify/:serial</code></td>
+                <td>Verify by Serial Number</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Discount & Transactions</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Method</th>
+                <th>Endpoint</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge badge-purple">POST</span></td>
+                <td><code>/api/discount/calculate</code></td>
+                <td>Calculate discount for amount</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-blue">GET</span></td>
+                <td><code>/api/discount/settings</code></td>
+                <td>Get discount settings</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-green">POST</span></td>
+                <td><code>/api/transactions</code></td>
+                <td>Create transaction with discount</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-blue">GET</span></td>
+                <td><code>/api/transactions/:id/receipt</code></td>
+                <td>Get receipt</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <h3>Reports</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Method</th>
+                <th>Endpoint</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><span class="badge badge-green">POST</span></td>
+                <td><code>/api/reports</code></td>
+                <td>Upload report</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-blue">GET</span></td>
+                <td><code>/api/reports/user/:userId</code></td>
+                <td>Get user reports</td>
+            </tr>
+            <tr>
+                <td><span class="badge badge-blue">GET</span></td>
+                <td><code>/api/reports/:id/download</code></td>
+                <td>Download report</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <h2>🎯 Summary</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Component</th>
+                <th>Features</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>Admin Panel</strong></td>
+                <td>User registration, Serial-based card generation, Lab management, Dashboard, Discount settings</td>
+            </tr>
+            <tr>
+                <td><strong>Lab Portal</strong></td>
+                <td>Serial lookup, Card verification, Test entry, <strong>Automatic 30% discount</strong>, Bill
+                    generation, Report upload</td>
+            </tr>
+            <tr>
+                <td><strong>Backend</strong></td>
+                <td>Auth, Card validation, <strong>Discount calculation engine</strong>, File storage, SMS/Email
+                    notifications</td>
+            </tr>
+            <tr>
+                <td><strong>User Web Portal</strong></td>
+                <td>Login with serial, View transactions, Download reports</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p><strong>Document Version:</strong> 2.0 | <strong>Last Updated:</strong> December 13, 2025</p>
+        <p><strong>Changes:</strong> Removed QR Code system | Removed Mobile Apps | Added Automatic Discount Module</p>
+    </div>
+
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default', securityLevel: 'loose' });
+    </script>
+</body>
+
+</html>
