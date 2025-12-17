@@ -77,6 +77,7 @@ router.get('/verify/:serial', authMiddleware, requireLabAccess, async (req: Auth
 
         res.json({
             valid: true,
+            discountEligible: true, // Card is ACTIVE and not expired
             card: {
                 serial_number: card.serial_number,
                 status: card.status,
