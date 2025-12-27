@@ -1,8 +1,28 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev dependencies for building)
+RUN npm ci
+
+# Copy source code and Prisma schema
+COPY . .
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build TypeScript
+RUN npm run build
+
+# Production stage
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Install dependencies
+# Install production dependencies only
 COPY package*.json ./
 RUN npm ci --only=production
 
@@ -10,8 +30,8 @@ RUN npm ci --only=production
 COPY prisma ./prisma/
 RUN npx prisma generate
 
-# Copy source code
-COPY dist ./dist/
+# Copy compiled code from builder
+COPY --from=builder /app/dist ./dist/
 
 # Create uploads directory
 RUN mkdir -p uploads/reports
