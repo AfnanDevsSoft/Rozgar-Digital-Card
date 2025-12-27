@@ -48,6 +48,35 @@ export interface HealthCard {
     expiry_date: string;
 }
 
+export interface User {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    father_name?: string;
+    guardian_name?: string;
+    cnic?: string;
+    dob?: string;
+    gender?: string;
+    blood_group?: string;
+    address?: string;
+    town?: string;
+    whatsapp_number?: string;
+    alternative_number?: string;
+    eligibility_type?: string;
+    disability_type?: string;
+    disability_other_comment?: string;
+    has_disability_certificate?: boolean;
+    monthly_income?: string | number;
+    family_members_count?: string | number;
+    current_health_condition?: string;
+    cnic_front_photo?: string;
+    cnic_back_photo?: string;
+    disability_certificate_photo?: string;
+    passport_photo?: string;
+    health_card: HealthCard | null;
+}
+
 export interface Transaction {
     id: string;
     receipt_number: string;
