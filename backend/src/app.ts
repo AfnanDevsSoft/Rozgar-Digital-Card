@@ -32,6 +32,9 @@ const PORT = process.env.PORT || 4000;
 // Initialize Prisma
 export const prisma = new PrismaClient();
 
+// Trust proxy for Railway (needed for rate limiting and real IPs)
+app.set('trust proxy', 1);
+
 // Middleware
 app.use(helmet({
     contentSecurityPolicy: false // Disable for Swagger UI
