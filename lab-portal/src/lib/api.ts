@@ -53,6 +53,7 @@ export interface Test {
     name: string;
     category: string;
     price: number;
+    discount_percent?: number;
     is_active: boolean;
 }
 
@@ -82,7 +83,14 @@ export const cardsAPI = {
 };
 
 export const transactionsAPI = {
-    create: (data: { serial_number: string; test_name: string; original_amount: number }) =>
+    create: (data: {
+        serial_number: string;
+        test_name: string;
+        original_amount: number;
+        discount_percentage?: number;
+        discount_amount?: number;
+        final_amount?: number;
+    }) =>
         api.post('/transactions', data),
     calculate: (original_amount: number) =>
         api.post('/transactions/calculate', { original_amount }),
@@ -94,7 +102,7 @@ export const transactionsAPI = {
 export const testsAPI = {
     getByLab: (labId: string) => api.get(`/test-catalog/lab/${labId}`),
     getCategories: (labId: string) => api.get(`/test-catalog/lab/${labId}/categories`),
-    create: (data: { name: string; category: string; price: number; lab_id: string }) =>
+    create: (data: { name: string; category: string; price: number; discount_percent?: number; lab_id: string }) =>
         api.post('/test-catalog', data),
     update: (id: string, data: any) => api.put(`/test-catalog/${id}`, data),
     toggleStatus: (id: string) => api.patch(`/test-catalog/${id}/toggle-status`),

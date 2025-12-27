@@ -14,7 +14,12 @@ export default function TestsPage() {
     const [tests, setTests] = useState<Test[]>([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [formData, setFormData] = useState({ name: '', category: '', price: '' });
+    const [formData, setFormData] = useState({
+        name: '',
+        category: '',
+        price: '',
+        discount_percent: ''
+    });
 
     useEffect(() => {
         dispatch(setCurrentPage('Test Catalog'));
@@ -39,11 +44,12 @@ export default function TestsPage() {
                 name: formData.name,
                 category: formData.category,
                 price: parseFloat(formData.price),
+                discount_percent: formData.discount_percent ? parseFloat(formData.discount_percent) : 0,
                 lab_id: user!.lab_id,
             });
             toast.success('Test added successfully!');
             setShowModal(false);
-            setFormData({ name: '', category: '', price: '' });
+            setFormData({ name: '', category: '', price: '', discount_percent: '' });
             fetchTests();
         } catch (error: any) {
             toast.error(error.response?.data?.error || 'Failed to add test');
@@ -150,6 +156,20 @@ export default function TestsPage() {
                             <div className="form-group">
                                 <label className="form-label">Price (Rs.) *</label>
                                 <input type="number" required min="0" className="form-input" value={formData.price} onChange={(e) => setFormData({ ...formData, price: e.target.value })} />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Discount Percentage (%)</label>
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    step="0.01"
+                                    className="form-input"
+                                    placeholder="e.g., 30"
+                                    value={formData.discount_percent}
+                                    onChange={(e) => setFormData({ ...formData, discount_percent: e.target.value })}
+                                />
+                                <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>Optional - Leave blank for 0% discount</p>
                             </div>
                             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
                                 <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>Cancel</button>

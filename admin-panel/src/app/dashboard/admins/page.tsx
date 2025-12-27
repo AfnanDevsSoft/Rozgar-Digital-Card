@@ -20,7 +20,6 @@ export default function AdminsPage() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        password: '',
         role: 'BRANCH_ADMIN' as 'SUPER_ADMIN' | 'BRANCH_ADMIN',
         lab_id: '',
     });
@@ -51,7 +50,7 @@ export default function AdminsPage() {
             await adminsAPI.create(formData);
             toast.success('Admin created successfully!');
             setShowModal(false);
-            setFormData({ name: '', email: '', password: '', role: 'BRANCH_ADMIN', lab_id: '' });
+            setFormData({ name: '', email: '', role: 'BRANCH_ADMIN', lab_id: '' });
             fetchData();
         } catch (error: any) {
             toast.error(error.response?.data?.error || 'Failed to create admin');
@@ -175,10 +174,9 @@ export default function AdminsPage() {
                                 <label className="form-label">Email *</label>
                                 <input type="email" required className="form-input" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
                             </div>
-                            <div className="form-group">
-                                <label className="form-label">Password *</label>
-                                <input type="password" required minLength={6} className="form-input" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
-                            </div>
+                            <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '16px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+                                ℹ️ Default password: <strong>user123</strong> (Admin must change on first login)
+                            </p>
                             <div className="form-group">
                                 <label className="form-label">Role *</label>
                                 <select className="form-select" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}>

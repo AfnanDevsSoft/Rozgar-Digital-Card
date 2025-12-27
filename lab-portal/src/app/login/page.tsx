@@ -32,10 +32,20 @@ export default function LoginPage() {
                 : await authAPI.loginStaff(email, password);
 
             const { token, user, staff } = response.data;
+            const loggedInUser = user || staff;
+
             Cookies.set('lab_token', token, { expires: 1 });
-            dispatch(setUser(user || staff));
-            toast.success(`Welcome, ${(user || staff).name}!`);
-            router.push('/dashboard');
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(loggedInUser));
+            dispatch(setUser(loggedInUser));
+            toast.success(`Welcome, ${loggedInUser.name}!`);
+
+            // Check if password change is required
+            if (loggedInUser.must_change_password) {
+                router.push('/change-password');
+            } else {
+                router.push('/dashboard');
+            }
         } catch (error: any) {
             toast.error(error.response?.data?.error || 'Login failed');
         } finally {

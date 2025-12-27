@@ -17,7 +17,10 @@ const router = Router();
 const createTransactionSchema = z.object({
     serial_number: z.string().min(10),
     test_name: z.string().min(2),
-    original_amount: z.number().positive()
+    original_amount: z.number().positive(),
+    discount_percentage: z.number().min(0).max(100).optional(),
+    discount_amount: z.number().min(0).optional(),
+    final_amount: z.number().positive().optional()
 });
 
 /**
@@ -61,7 +64,7 @@ router.get('/my', authMiddleware, async (req: AuthRequest, res: Response) => {
 });
 
 /**
- * Create transaction with auto discount
+ * Create transaction with discount from frontend
  * POST /api/transactions
  */
 router.post('/', authMiddleware, requireLabAccess, async (req: AuthRequest, res: Response) => {
@@ -95,8 +98,19 @@ router.post('/', authMiddleware, requireLabAccess, async (req: AuthRequest, res:
             return;
         }
 
-        // Calculate discount automatically
-        const discountResult = await calculateDiscount(data.original_amount, labId);
+        // Use discount values from frontend (already calculated per-test)
+        // If not provided, calculate using old method as fallback
+        let discountPercentage = data.discount_percentage ?? 0;
+        let discountAmount = data.discount_amount ?? 0;
+        let finalAmount = data.final_amount ?? data.original_amount;
+
+        // If frontend didn't send discount values, calculate (fallback for compatibility)
+        if (data.discount_percentage === undefined && data.discount_amount === undefined) {
+            const discountResult = await calculateDiscount(data.original_amount, labId);
+            discountPercentage = discountResult.discount_percentage;
+            discountAmount = discountResult.discount_amount;
+            finalAmount = discountResult.final_amount;
+        }
 
         // Generate receipt number
         const receiptNumber = await generateReceiptNumber();
@@ -109,10 +123,10 @@ router.post('/', authMiddleware, requireLabAccess, async (req: AuthRequest, res:
                 health_card_id: card.id,
                 lab_id: labId,
                 test_name: data.test_name,
-                original_amount: new Decimal(discountResult.original_amount),
-                discount_percentage: new Decimal(discountResult.discount_percentage),
-                discount_amount: new Decimal(discountResult.discount_amount),
-                final_amount: new Decimal(discountResult.final_amount)
+                original_amount: new Decimal(data.original_amount),
+                discount_percentage: new Decimal(discountPercentage),
+                discount_amount: new Decimal(discountAmount),
+                final_amount: new Decimal(finalAmount)
             },
             include: {
                 user: {
@@ -141,10 +155,10 @@ router.post('/', authMiddleware, requireLabAccess, async (req: AuthRequest, res:
                 patient_name: card.user.name,
                 serial_number: data.serial_number,
                 test_name: data.test_name,
-                original_amount: discountResult.original_amount,
-                discount_percentage: discountResult.discount_percentage,
-                discount_amount: discountResult.discount_amount,
-                final_amount: discountResult.final_amount,
+                original_amount: data.original_amount,
+                discount_percentage: discountPercentage,
+                discount_amount: discountAmount,
+                final_amount: finalAmount,
                 lab_name: transaction.lab.name,
                 lab_address: transaction.lab.address,
                 date: transaction.created_at

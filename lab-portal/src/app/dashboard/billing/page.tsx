@@ -80,12 +80,31 @@ export default function EnhancedBillingPage() {
     };
 
     const calculateTotals = () => {
-        const original = selectedTests.reduce((sum, t) => sum + (Number(t.price) * t.quantity), 0);
-        const discountPercent = cardInfo?.discountEligible ? (user?.lab?.discount_rate || 0) : 0;
-        const discount = (original * discountPercent) / 100;
-        const final = original - discount;
+        let original = 0;
+        let totalDiscount = 0;
 
-        return { original, discountPercent, discount, final };
+        // Calculate per-test discounts
+        selectedTests.forEach(test => {
+            const testTotal = Number(test.price) * test.quantity;
+            const testDiscountPercent = cardInfo?.discountEligible ? (Number(test.discount_percent) || 0) : 0;
+            const testDiscount = (testTotal * testDiscountPercent) / 100;
+
+            console.log('Test:', test.name,
+                'Price:', test.price,
+                'Discount%:', test.discount_percent,
+                'Parsed:', testDiscountPercent,
+                'Eligible:', cardInfo?.discountEligible);
+
+            original += testTotal;
+            totalDiscount += testDiscount;
+        });
+
+        const final = original - totalDiscount;
+        const avgDiscountPercent = original > 0 ? (totalDiscount / original) * 100 : 0;
+
+        console.log('Total calculation:', { original, totalDiscount, avgDiscountPercent, final });
+
+        return { original, discountPercent: avgDiscountPercent, discount: totalDiscount, final };
     };
 
     const handleCreateBill = async () => {
@@ -97,11 +116,14 @@ export default function EnhancedBillingPage() {
 
         setLoading(true);
         try {
-            const { original, final } = calculateTotals();
+            const { original, discountPercent, discount, final } = calculateTotals();
             const response = await transactionsAPI.create({
                 serial_number: cardInfo.card.serial_number,
                 test_name: testNames,
                 original_amount: original,
+                discount_percentage: discountPercent,
+                discount_amount: discount,
+                final_amount: final
             });
             setTransaction(response.data.transaction);
             toast.success('Bill created successfully!');
@@ -236,7 +258,7 @@ export default function EnhancedBillingPage() {
                             <div>
                                 <p style={{ fontWeight: 600 }}>{cardInfo.user.name}</p>
                                 <p style={{ fontSize: '13px', color: '#6b7280' }}>
-                                    {cardInfo.discountEligible ? `Eligible for ${user?.lab?.discount_rate}% discount` : 'Card not eligible for discount'}
+                                    {cardInfo.discountEligible ? 'Eligible for test discounts' : 'Card not eligible for discount'}
                                 </p>
                             </div>
                         </div>
@@ -263,6 +285,7 @@ export default function EnhancedBillingPage() {
                             {tests.map(test => (
                                 <option key={test.id} value={test.id}>
                                     {test.name} - Rs. {Number(test.price).toLocaleString()}
+                                    {(test.discount_percent || 0) > 0 && ` (${test.discount_percent}% off)`}
                                 </option>
                             ))}
                         </select>
@@ -274,7 +297,14 @@ export default function EnhancedBillingPage() {
                                         <div key={test.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
                                             <div style={{ flex: 1 }}>
                                                 <p style={{ fontWeight: 500 }}>{test.name}</p>
-                                                <p style={{ fontSize: '13px', color: '#6b7280' }}>Rs. {Number(test.price).toLocaleString()} each</p>
+                                                <p style={{ fontSize: '13px', color: '#6b7280' }}>
+                                                    Rs. {Number(test.price).toLocaleString()} each
+                                                    {(test.discount_percent || 0) > 0 && (
+                                                        <span style={{ color: '#16a34a', marginLeft: '8px' }}>
+                                                            • {test.discount_percent}% discount
+                                                        </span>
+                                                    )}
+                                                </p>
                                             </div>
                                             <input
                                                 type="number"

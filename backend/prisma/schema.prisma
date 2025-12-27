@@ -168,15 +168,16 @@ model LabStaff {
 
 // Test Catalog model
 model TestCatalog {
-  id        String   @id @default(uuid())
-  lab_id    String
-  lab       Lab      @relation(fields: [lab_id], references: [id], onDelete: Cascade)
-  name      String
-  category  String
-  price     Decimal  @db.Decimal(10, 2)
-  is_active Boolean  @default(true)
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  id               String   @id @default(uuid())
+  lab_id           String
+  lab              Lab      @relation(fields: [lab_id], references: [id], onDelete: Cascade)
+  name             String
+  category         String
+  price            Decimal  @db.Decimal(10, 2)
+  discount_percent Decimal  @default(0) @db.Decimal(5, 2)
+  is_active        Boolean  @default(true)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
 
   @@map("test_catalogs")
 }

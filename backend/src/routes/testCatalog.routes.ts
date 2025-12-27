@@ -16,6 +16,7 @@ const createTestSchema = z.object({
     name: z.string().min(2),
     category: z.string().min(2),
     price: z.number().positive(),
+    discount_percent: z.number().min(0).max(100).optional(),
     lab_id: z.string()
 });
 
@@ -137,8 +138,9 @@ router.post('/', authMiddleware, requireAdmin, async (req: AuthRequest, res: Res
                 name: data.name,
                 category: data.category,
                 price: new Decimal(data.price),
+                discount_percent: data.discount_percent ? new Decimal(data.discount_percent) : new Decimal(0),
                 lab_id: data.lab_id
-            }
+            } as any
         });
 
         res.status(201).json(test);

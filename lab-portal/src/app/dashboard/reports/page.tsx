@@ -76,7 +76,7 @@ export default function EnhancedReportsPage() {
             });
 
             const token = localStorage.getItem('token');
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/reports`, {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/reports`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,

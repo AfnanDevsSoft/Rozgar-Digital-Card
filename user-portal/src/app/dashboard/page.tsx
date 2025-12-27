@@ -197,7 +197,7 @@ function DocumentCard({ label, url }: { label: string; url: string }) {
 
     return (
         <a
-            href={`${process.env.NEXT_PUBLIC_API_URL}${url}`}
+            href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}${url}`}
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -214,7 +214,7 @@ function DocumentCard({ label, url }: { label: string; url: string }) {
         >
             {isImage ? (
                 <img
-                    src={`${process.env.NEXT_PUBLIC_API_URL}${url}`}
+                    src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}${url}`}
                     alt={label}
                     style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '4px', marginBottom: '8px' }}
                 />

@@ -65,7 +65,7 @@ export default function ReportsPage() {
                                     </div>
                                 </div>
                                 <a
-                                    href={report.file_url}
+                                    href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}${report.file_url}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="btn btn-primary"

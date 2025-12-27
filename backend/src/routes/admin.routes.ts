@@ -15,7 +15,7 @@ const router = Router();
 const createAdminSchema = z.object({
     name: z.string().min(2),
     email: z.string().email(),
-    password: z.string().min(6),
+    password: z.string().min(6).optional(),
     role: z.enum(['SUPER_ADMIN', 'BRANCH_ADMIN']),
     lab_id: z.string().optional()
 });
@@ -104,7 +104,10 @@ router.post('/', authMiddleware, requireSuperAdmin, async (req: AuthRequest, res
             }
         }
 
-        const passwordHash = await bcrypt.hash(data.password, 12);
+        // Use provided password or default to 'user123'
+        const defaultPassword = 'user123';
+        const password = data.password || defaultPassword;
+        const passwordHash = await bcrypt.hash(password, 12);
 
         const admin = await prisma.admin.create({
             data: {
@@ -112,7 +115,8 @@ router.post('/', authMiddleware, requireSuperAdmin, async (req: AuthRequest, res
                 email: data.email,
                 password_hash: passwordHash,
                 role: data.role,
-                lab_id: data.lab_id
+                lab_id: data.lab_id,
+                must_change_password: !data.password // If no password provided, force change
             },
             include: { lab: true }
         });

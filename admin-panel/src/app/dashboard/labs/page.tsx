@@ -24,8 +24,6 @@ export default function LabsPage() {
         address: '',
         phone: '',
         email: '',
-        license_no: '',
-        discount_rate: 30,
     });
 
     useEffect(() => {
@@ -50,7 +48,7 @@ export default function LabsPage() {
             await labsAPI.create(formData);
             toast.success('Lab created successfully!');
             setShowModal(false);
-            setFormData({ name: '', address: '', phone: '', email: '', license_no: '', discount_rate: 30 });
+            setFormData({ name: '', address: '', phone: '', email: '' });
             fetchLabs();
         } catch (error: any) {
             toast.error(error.response?.data?.error || 'Failed to create lab');
@@ -129,8 +127,8 @@ export default function LabsPage() {
                                     </div>
                                 </div>
                                 <span className={`badge ${lab.status === 'ACTIVE' ? 'badge-success' :
-                                        lab.status === 'SUSPENDED' ? 'badge-danger' :
-                                            'badge-neutral'
+                                    lab.status === 'SUSPENDED' ? 'badge-danger' :
+                                        'badge-neutral'
                                     }`}>
                                     {lab.status}
                                 </span>
@@ -206,16 +204,6 @@ export default function LabsPage() {
                                 <div className="form-group">
                                     <label className="form-label">Email *</label>
                                     <input type="email" required className="form-input" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} />
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-2">
-                                <div className="form-group">
-                                    <label className="form-label">License No</label>
-                                    <input type="text" className="form-input" value={formData.license_no} onChange={(e) => setFormData({ ...formData, license_no: e.target.value })} />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Discount Rate (%)</label>
-                                    <input type="number" min="0" max="100" className="form-input" value={formData.discount_rate} onChange={(e) => setFormData({ ...formData, discount_rate: parseInt(e.target.value) || 30 })} />
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
