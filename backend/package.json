@@ -6,7 +6,7 @@
     "scripts": {
         "dev": "tsx watch src/app.ts",
         "build": "tsc",
-        "start": "node dist/app.js",
+        "start": "node dist/src/app.js",
         "start:migrate": "npx prisma migrate deploy && npm run prisma:seed && npm start",
         "prisma:generate": "prisma generate",
         "prisma:migrate": "prisma migrate dev",

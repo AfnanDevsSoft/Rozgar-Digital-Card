@@ -16,4 +16,4 @@ ls -la dist/ || echo "dist folder not found"
 
 # Start the application
 echo "🎯 Starting application..."
-exec node dist/app.js
+exec node dist/src/app.js
