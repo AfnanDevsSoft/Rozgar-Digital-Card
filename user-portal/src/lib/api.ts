@@ -8,6 +8,22 @@ const api: AxiosInstance = axios.create({
     headers: { 'Content-Type': 'application/json' },
 });
 
+// Helper to get full URL for files
+export const getFileUrl = (path: string) => {
+    if (!path) return '';
+    if (path.startsWith('http')) return path;
+
+    // API_URL is usually http://localhost:4000/api
+    const baseUrl = API_URL.replace(/\/api$/, ''); // http://localhost:4000
+
+    // Ensure path starts with /
+    const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+
+    // If path already contains /api/, don't add it again if the baseURL doesn't have it
+    // But our backend static route is /api/uploads
+    return `${baseUrl}${normalizedPath}`;
+};
+
 api.interceptors.request.use((config) => {
     const token = Cookies.get('user_token');
     if (token) config.headers.Authorization = `Bearer ${token}`;

@@ -8,6 +8,7 @@
 import { useEffect, useState } from 'react';
 import { User, Mail, Phone, MapPin, Calendar, Heart, Users, DollarSign, FileText, CreditCard } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { getFileUrl } from '@/lib/api';
 
 export default function ProfilePage() {
     const [user, setUser] = useState<any>(null);
@@ -197,7 +198,7 @@ function DocumentCard({ label, url }: { label: string; url: string }) {
 
     return (
         <a
-            href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}${url}`}
+            href={getFileUrl(url)}
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -214,7 +215,7 @@ function DocumentCard({ label, url }: { label: string; url: string }) {
         >
             {isImage ? (
                 <img
-                    src={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}${url}`}
+                    src={getFileUrl(url)}
                     alt={label}
                     style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '4px', marginBottom: '8px' }}
                 />

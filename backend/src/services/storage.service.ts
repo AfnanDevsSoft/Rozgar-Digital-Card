@@ -60,7 +60,7 @@ export const saveFile = async (
                 success: true,
                 fileName: file.originalname,
                 filePath,
-                fileUrl: `/uploads/reports/${uniqueName}`,
+                fileUrl: `/api/uploads/reports/${uniqueName}`,
                 fileSize: compressed.length,
                 fileType: file.mimetype
             };
@@ -73,7 +73,7 @@ export const saveFile = async (
             success: true,
             fileName: file.originalname,
             filePath,
-            fileUrl: `/uploads/reports/${uniqueName}`,
+            fileUrl: `/api/uploads/reports/${uniqueName}`,
             fileSize: file.size,
             fileType: file.mimetype
         };

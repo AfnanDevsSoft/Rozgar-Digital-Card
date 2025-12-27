@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { userAPI } from '@/lib/api';
+import { userAPI, getFileUrl } from '@/lib/api';
 import { FileText, Download, Calendar } from 'lucide-react';
 
 interface Report {
@@ -65,7 +65,7 @@ export default function ReportsPage() {
                                     </div>
                                 </div>
                                 <a
-                                    href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}${report.file_url}`}
+                                    href={getFileUrl(report.file_url)}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="btn btn-primary"
