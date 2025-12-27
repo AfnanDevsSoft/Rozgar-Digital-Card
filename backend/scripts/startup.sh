@@ -10,6 +10,10 @@ npx prisma migrate deploy || echo "⚠️  Migration skipped - manual migration 
 echo "🌱 Seeding database..."
 npm run prisma:seed:prod || echo "⚠️  Seeding skipped - may already be seeded"
 
+# Debug: Check what files exist
+echo "📋 Checking dist folder structure..."
+ls -la dist/ || echo "dist folder not found"
+
 # Start the application
 echo "🎯 Starting application..."
 exec node dist/app.js
