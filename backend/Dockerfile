@@ -39,11 +39,15 @@ RUN npx prisma generate
 # Copy compiled code from builder
 COPY --from=builder /app/dist ./dist/
 
+# Copy startup script
+COPY scripts/startup.sh ./scripts/startup.sh
+RUN chmod +x ./scripts/startup.sh
+
 # Create uploads directory
 RUN mkdir -p uploads/reports
 
 # Expose port
 EXPOSE 4000
 
-# Start the application
-CMD ["node", "dist/app.js"]
+# Run startup script (migrations, seeding, then start app)
+CMD ["./scripts/startup.sh"]
