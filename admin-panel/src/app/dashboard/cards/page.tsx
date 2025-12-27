@@ -22,6 +22,7 @@ interface HealthCard {
         name: string;
         email: string;
         phone: string;
+        cnic?: string;
     };
 }
 
@@ -81,22 +82,27 @@ export default function CardsPage() {
     };
 
     const handlePrintCard = (card: HealthCard) => {
-        // Standard credit card size: 85.6mm × 53.98mm (3.375" × 2.125")
-        const printWindow = window.open('', '_blank', 'width=600,height=500');
+        // SHIFA SAHULAT CARD - 300mm × 200mm (Horizontal/Landscape) with background images
+        const printWindow = window.open('', '_blank', 'width=1200,height=700');
         if (!printWindow) return;
+
+        // Get absolute URLs for images
+        const baseUrl = window.location.origin;
+        const frontImageUrl = `${baseUrl}/card/front.jpg`;
+        const backImageUrl = `${baseUrl}/card/back.jpg`;
 
         const cardHTML = `
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Health Card - ${card.serial_number}</title>
+    <title>Shifa Sahulat Card - ${card.serial_number}</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
         
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
+            font-family: 'Inter', Arial, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -107,177 +113,143 @@ export default function CardsPage() {
         
         .card-container {
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            flex-direction: row;
+            gap: 30px;
             align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         
         .card {
-            width: 85.6mm;
-            height: 53.98mm;
-            border-radius: 3mm;
-            padding: 5mm;
+            width: 300mm;
+            height: 200mm;
             position: relative;
-            overflow: hidden;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
         
         .card-front {
-            background: linear-gradient(135deg, #0a0a0a 0%, #1f1f1f 50%, #0a0a0a 100%);
-            color: #fff;
+            background-image: url('${frontImageUrl}');
         }
         
         .card-back {
-            background: linear-gradient(135deg, #1f1f1f 0%, #0a0a0a 100%);
-            color: #fff;
+            background-image: url('${backImageUrl}');
         }
         
-        .card-pattern {
+        /* Data overlay positioning for BACK card */
+        .data-overlay {
             position: absolute;
-            right: -20mm;
-            top: -20mm;
-            width: 50mm;
-            height: 50mm;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.05);
+            width: 100%;
+            height: 100%;
         }
         
-        .card-pattern-2 {
+        /* Adjust these positions based on your horizontal card design */
+        .sr-number {
             position: absolute;
-            right: 10mm;
-            bottom: -15mm;
-            width: 35mm;
-            height: 35mm;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.03);
-        }
-        
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 4mm;
-        }
-        
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 2mm;
-        }
-        
-        .logo-icon { font-size: 5mm; }
-        .logo-text { font-size: 2.5mm; font-weight: 600; letter-spacing: 0.5mm; }
-        .card-type { font-size: 1.8mm; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.3mm; }
-        
-        .serial-number {
-            font-size: 4mm;
-            font-family: 'Courier New', monospace;
+            top: 85mm;
+            left: 95mm;
+            font-size: 18pt;
             font-weight: 700;
-            letter-spacing: 1mm;
-            margin-bottom: 5mm;
+            color: #000;
+            font-family: 'Inter', Arial, sans-serif;
         }
         
-        .card-details { display: flex; gap: 8mm; }
-        .detail-group { flex: 1; }
-        .detail-label { font-size: 1.5mm; opacity: 0.6; text-transform: uppercase; letter-spacing: 0.2mm; margin-bottom: 0.5mm; }
-        .detail-value { font-size: 2.2mm; font-weight: 500; }
-        
-        .status-badge {
+        .name {
             position: absolute;
-            top: 5mm;
-            right: 5mm;
-            background: ${card.status === 'ACTIVE' ? '#16a34a' : '#dc2626'};
-            color: #fff;
-            padding: 0.8mm 2mm;
-            border-radius: 1mm;
-            font-size: 1.5mm;
-            font-weight: 600;
+            top: 100mm;
+            left: 95mm;
+            font-size: 18pt;
+            font-weight: 700;
+            color: #000;
             text-transform: uppercase;
+            font-family: 'Inter', Arial, sans-serif;
         }
         
-        .magnetic-strip {
+        .cnic {
             position: absolute;
-            top: 8mm;
-            left: 0;
-            right: 0;
-            height: 8mm;
-            background: #333;
+            top: 115mm;
+            left: 95mm;
+            font-size: 18pt;
+            font-weight: 700;
+            color: #000;
+            font-family: 'Inter', Arial, sans-serif;
         }
         
-        .back-content { margin-top: 18mm; padding: 0 3mm; }
-        .back-info { font-size: 1.6mm; line-height: 1.6; opacity: 0.8; }
-        .back-serial { margin-top: 4mm; font-family: 'Courier New', monospace; font-size: 2mm; }
+        .valid-thru {
+            position: absolute;
+            top: 140mm;
+            left: 95mm;
+            font-size: 16pt;
+            font-weight: 700;
+            color: #000;
+            text-transform: uppercase;
+            font-family: 'Inter', Arial, sans-serif;
+        }
+        
+        .button-container {
+            width: 100%;
+            text-align: center;
+            margin-top: 20px;
+        }
         
         .print-button {
-            padding: 12px 32px;
-            background: #0a0a0a;
+            padding: 15px 40px;
+            background: #1a5f3f;
             color: #fff;
             border: none;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 18px;
             font-weight: 600;
             cursor: pointer;
+            box-shadow: 0 4px 12px rgba(26, 95, 63, 0.3);
         }
         
-        .print-button:hover { background: #1f1f1f; }
+        .print-button:hover { background: #0d4029; }
         
         @media print {
-            body { background: #fff; }
+            body { 
+                background: #fff; 
+                padding: 0;
+                margin: 0;
+            }
             .print-button { display: none; }
-            .card { box-shadow: none; border: 1px solid #ddd; }
-            @page { margin: 10mm; size: auto; }
+            .button-container { display: none; }
+            .card { 
+                box-shadow: none; 
+                margin: 0;
+                page-break-after: always;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            @page { 
+                margin: 0; 
+                size: 300mm 200mm landscape; 
+            }
         }
     </style>
 </head>
 <body>
-    <div class="card-container">
-        <!-- Front of Card -->
-        <div class="card card-front">
-            <div class="card-pattern"></div>
-            <div class="card-pattern-2"></div>
-            <div class="status-badge">${card.status}</div>
+    <div style="width: 100%;">
+        <div class="card-container">
+            <!-- FRONT CARD (Background Image Only) -->
+            <div class="card card-front"></div>
             
-            <div class="card-header">
-                <div class="logo-area">
-                    <span class="logo-icon">🏥</span>
-                    <div>
-                        <div class="logo-text">DIGITAL HEALTH CARD</div>
-                        <div class="card-type">Member Since ${new Date(card.issue_date).getFullYear()}</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="serial-number">${card.serial_number}</div>
-            
-            <div class="card-details">
-                <div class="detail-group">
-                    <div class="detail-label">Card Holder</div>
-                    <div class="detail-value">${card.user.name.toUpperCase()}</div>
-                </div>
-                <div class="detail-group">
-                    <div class="detail-label">Valid Until</div>
-                    <div class="detail-value">${new Date(card.expiry_date).toLocaleDateString('en-US', { month: '2-digit', year: '2-digit' })}</div>
+            <!-- BACK CARD (Background Image + Data Overlay) -->
+            <div class="card card-back">
+                <div class="data-overlay">
+                    <div class="sr-number">${card.serial_number}</div>
+                    <div class="name">${card.user.name.toUpperCase()}</div>
+                    <div class="cnic">${card.user.cnic || '_____-_______-_'}</div>
+                    <div class="valid-thru">${new Date(card.expiry_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}</div>
                 </div>
             </div>
         </div>
         
-        <!-- Back of Card -->
-        <div class="card card-back">
-            <div class="magnetic-strip"></div>
-            <div class="back-content">
-                <div class="back-info">
-                    This card entitles the holder to discounts at all partner laboratories. 
-                    Present this card before any test for automatic discount application.
-                    <br/><br/>
-                    For support: support@healthcard.com
-                </div>
-                <div class="back-serial">
-                    ID: ${card.serial_number} | ${card.user.phone}
-                </div>
-            </div>
+        <div class="button-container">
+            <button class="print-button" onclick="window.print()">🖨️ Print Card</button>
         </div>
-        
-        <button class="print-button" onclick="window.print()">🖨️ Print Card</button>
     </div>
 </body>
 </html>`;
