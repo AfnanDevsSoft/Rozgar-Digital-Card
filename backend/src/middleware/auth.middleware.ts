@@ -8,6 +8,7 @@ export interface AuthRequest extends Request {
         email: string;
         role: string;
         lab_id?: string;
+        must_change_password?: boolean;
     };
 }
 
@@ -38,6 +39,8 @@ export const authMiddleware = async (
         const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
         // Verify user still exists and is active
+        let mustChangePassword = false;
+
         if (decoded.type === 'admin') {
             const admin = await prisma.admin.findUnique({
                 where: { id: decoded.id }
@@ -46,6 +49,7 @@ export const authMiddleware = async (
                 res.status(401).json({ error: 'Account not found or inactive' });
                 return;
             }
+            mustChangePassword = admin.must_change_password;
         } else if (decoded.type === 'user') {
             const user = await prisma.user.findUnique({
                 where: { id: decoded.id }
@@ -54,6 +58,7 @@ export const authMiddleware = async (
                 res.status(401).json({ error: 'Account not found or inactive' });
                 return;
             }
+            mustChangePassword = user.must_change_password;
         } else if (decoded.type === 'staff') {
             const staff = await prisma.labStaff.findUnique({
                 where: { id: decoded.id }
@@ -62,13 +67,15 @@ export const authMiddleware = async (
                 res.status(401).json({ error: 'Account not found or inactive' });
                 return;
             }
+            mustChangePassword = staff.must_change_password;
         }
 
         req.user = {
             id: decoded.id,
             email: decoded.email,
             role: decoded.role,
-            lab_id: decoded.lab_id
+            lab_id: decoded.lab_id,
+            must_change_password: mustChangePassword
         };
 
         next();
@@ -83,5 +90,5 @@ export const authMiddleware = async (
 
 // Generate JWT token
 export const generateToken = (payload: JwtPayload, expiresIn: string = '24h'): string => {
-    return jwt.sign(payload, JWT_SECRET, { expiresIn });
+    return jwt.sign(payload, JWT_SECRET, { expiresIn } as jwt.SignOptions);
 };

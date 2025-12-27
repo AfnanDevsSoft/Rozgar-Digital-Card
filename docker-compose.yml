@@ -8,11 +8,11 @@ services:
     environment:
       POSTGRES_DB: health_card_db
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-admin123}
+      POSTGRES_PASSWORD: admin123
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "5434:5432"
     networks:
       - health_card_network
 

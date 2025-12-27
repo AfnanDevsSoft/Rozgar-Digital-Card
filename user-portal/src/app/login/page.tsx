@@ -29,9 +29,17 @@ export default function LoginPage() {
             const response = await authAPI.login(serial.toUpperCase(), password);
             const { token, user } = response.data;
             Cookies.set('user_token', token, { expires: 1 });
+            localStorage.setItem('token', token);
+            localStorage.setItem('user', JSON.stringify(user));
             dispatch(setUser(user));
             toast.success(`Welcome, ${user.name}!`);
-            router.push('/dashboard');
+
+            // Check if password change is required
+            if (user.must_change_password) {
+                router.push('/change-password');
+            } else {
+                router.push('/dashboard');
+            }
         } catch (error: any) {
             toast.error(error.response?.data?.error || 'Login failed');
         } finally {

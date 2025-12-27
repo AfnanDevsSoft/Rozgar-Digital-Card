@@ -1,0 +1,23 @@
+User add fields
+Full name
+father name
+guardian name
+CNIC/Bayform
+Date of Birth
+Gender
+Whatsapp number
+Alternative number
+Email
+Residential Address
+Town 
+Eligibility Type dropdown - > Differentiable Person / Low Income Family
+Disibilty Type Dropdown - > physical / Visual / Hearing / Mentaly / other (open box for comment ) 
+Disibility Certificate ( if yes so upload file)
+monthly income 
+count ( number ) of faimly members 
+Current health condition -> openn box for details
+
+upload options
+required CNIc front/ back photo
+Disbality Certificate photo
+Passport size photo

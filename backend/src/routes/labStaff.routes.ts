@@ -15,7 +15,7 @@ const router = Router();
 const createStaffSchema = z.object({
     name: z.string().min(2),
     email: z.string().email(),
-    password: z.string().min(6),
+    password: z.string().min(6).optional(),
     lab_id: z.string()
 });
 
@@ -108,20 +108,27 @@ router.post('/', authMiddleware, requireAdmin, async (req: AuthRequest, res: Res
             return;
         }
 
-        const passwordHash = await bcrypt.hash(data.password, 12);
+        // Use default password "user123" for all new lab staff
+        const tempPassword = 'user123';
+        const passwordHash = await bcrypt.hash(tempPassword, 12);
 
         const staff = await prisma.labStaff.create({
             data: {
                 name: data.name,
                 email: data.email,
                 password_hash: passwordHash,
-                lab_id: data.lab_id
+                lab_id: data.lab_id,
+                must_change_password: true  // Force password change on first login
             },
             include: { lab: true }
         });
 
         const { password_hash: _, ...safeStaff } = staff;
-        res.status(201).json(safeStaff);
+        res.status(201).json({
+            ...safeStaff,
+            temp_password: tempPassword,
+            message: 'Lab staff created. Default password: user123. Please share with staff member.'
+        });
     } catch (error) {
         if (error instanceof z.ZodError) {
             res.status(400).json({ error: 'Invalid input', details: error.errors });

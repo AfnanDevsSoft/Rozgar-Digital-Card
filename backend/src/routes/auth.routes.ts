@@ -65,12 +65,14 @@ router.post('/admin/login', async (req: Request, res: Response) => {
 
         res.json({
             token,
+            must_change_password: admin.must_change_password,
             user: {
                 id: admin.id,
                 email: admin.email,
                 name: admin.name,
                 role: admin.role,
-                lab: admin.lab
+                lab: admin.lab,
+                must_change_password: admin.must_change_password
             }
         });
     } catch (error) {
@@ -122,11 +124,13 @@ router.post('/user/login', async (req: Request, res: Response) => {
 
         res.json({
             token,
+            must_change_password: card.user.must_change_password,
             user: {
                 id: card.user.id,
                 email: card.user.email,
                 name: card.user.name,
                 phone: card.user.phone,
+                must_change_password: card.user.must_change_password,
                 card: {
                     serial_number: card.serial_number,
                     status: card.status,
@@ -188,12 +192,14 @@ router.post('/staff/login', async (req: Request, res: Response) => {
 
         res.json({
             token,
+            must_change_password: staff.must_change_password,
             user: {
                 id: staff.id,
                 email: staff.email,
                 name: staff.name,
                 role: 'RECEPTIONIST',
-                lab: staff.lab
+                lab: staff.lab,
+                must_change_password: staff.must_change_password
             }
         });
     } catch (error) {
@@ -267,7 +273,14 @@ router.post('/change-password', authMiddleware, async (req: AuthRequest, res: Re
                 return;
             }
             passwordHash = await bcrypt.hash(new_password, 12);
-            await prisma.admin.update({ where: { id }, data: { password_hash: passwordHash } });
+            await prisma.admin.update({
+                where: { id },
+                data: {
+                    password_hash: passwordHash,
+                    must_change_password: false,
+                    password_changed_at: new Date()
+                }
+            });
         } else if (role === 'USER') {
             const user = await prisma.user.findUnique({ where: { id } });
             if (!user || !(await bcrypt.compare(current_password, user.password_hash))) {
@@ -275,7 +288,14 @@ router.post('/change-password', authMiddleware, async (req: AuthRequest, res: Re
                 return;
             }
             passwordHash = await bcrypt.hash(new_password, 12);
-            await prisma.user.update({ where: { id }, data: { password_hash: passwordHash } });
+            await prisma.user.update({
+                where: { id },
+                data: {
+                    password_hash: passwordHash,
+                    must_change_password: false,
+                    password_changed_at: new Date()
+                }
+            });
         } else if (role === 'RECEPTIONIST') {
             const staff = await prisma.labStaff.findUnique({ where: { id } });
             if (!staff || !(await bcrypt.compare(current_password, staff.password_hash))) {
@@ -283,7 +303,14 @@ router.post('/change-password', authMiddleware, async (req: AuthRequest, res: Re
                 return;
             }
             passwordHash = await bcrypt.hash(new_password, 12);
-            await prisma.labStaff.update({ where: { id }, data: { password_hash: passwordHash } });
+            await prisma.labStaff.update({
+                where: { id },
+                data: {
+                    password_hash: passwordHash,
+                    must_change_password: false,
+                    password_changed_at: new Date()
+                }
+            });
         }
 
         res.json({ message: 'Password changed successfully' });

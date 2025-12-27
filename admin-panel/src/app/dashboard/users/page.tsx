@@ -9,6 +9,7 @@ import { useDispatch } from 'react-redux';
 import { setCurrentPage } from '@/store/slices/uiSlice';
 import { usersAPI, User } from '@/lib/api';
 import toast from 'react-hot-toast';
+import EnhancedUserForm from '@/components/EnhancedUserForm';
 import {
     Plus,
     Search,
@@ -18,6 +19,7 @@ import {
     UserCheck,
     KeyRound,
     X,
+    Printer,
 } from 'lucide-react';
 
 export default function UsersPage() {
@@ -120,6 +122,36 @@ export default function UsersPage() {
         }
     };
 
+    const handlePrintCard = async (user: User) => {
+        if (!user.health_card) {
+            toast.error('No health card found');
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/cards/${user.health_card.id}/print`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (!response.ok) throw new Error('Failed to generate card');
+
+            const data = await response.json();
+            toast.success('Card PDF generated!');
+
+            // Open PDF in new tab
+            window.open(`${process.env.NEXT_PUBLIC_API_URL}${data.file_url}`, '_blank');
+        } catch (error) {
+            toast.error('Failed to print card');
+        }
+    };
+
     return (
         <div className="animate-fadeIn">
             {/* Header */}
@@ -207,8 +239,8 @@ export default function UsersPage() {
                                         <td>{user.phone}</td>
                                         <td>
                                             <span className={`badge ${user.health_card?.status === 'ACTIVE' ? 'badge-success' :
-                                                    user.health_card?.status === 'EXPIRED' ? 'badge-danger' :
-                                                        'badge-neutral'
+                                                user.health_card?.status === 'EXPIRED' ? 'badge-danger' :
+                                                    'badge-neutral'
                                                 }`}>
                                                 {user.health_card?.status || 'No Card'}
                                             </span>
@@ -236,6 +268,14 @@ export default function UsersPage() {
                                                     title="Reset Password"
                                                 >
                                                     <KeyRound size={16} />
+                                                </button>
+                                                <button
+                                                    className="btn btn-ghost btn-sm"
+                                                    onClick={() => handlePrintCard(user)}
+                                                    title="Print Card"
+                                                    disabled={!user.health_card}
+                                                >
+                                                    <Printer size={16} />
                                                 </button>
                                             </div>
                                         </td>
@@ -272,146 +312,12 @@ export default function UsersPage() {
                 )}
             </div>
 
-            {/* Create User Modal */}
+            {/* Enhanced User Form Modal */}
             {showModal && (
-                <div style={{
-                    position: 'fixed',
-                    inset: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 200,
-                }}>
-                    <div style={{
-                        backgroundColor: '#ffffff',
-                        borderRadius: '16px',
-                        width: '100%',
-                        maxWidth: '600px',
-                        maxHeight: '90vh',
-                        overflow: 'auto',
-                    }}>
-                        <div style={{ padding: '24px', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 600 }}>Create New User</h2>
-                            <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                                <X size={24} color="#6b7280" />
-                            </button>
-                        </div>
-                        <form onSubmit={handleCreateUser} style={{ padding: '24px' }}>
-                            <div className="grid grid-cols-2">
-                                <div className="form-group">
-                                    <label className="form-label">Full Name *</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        className="form-input"
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Email *</label>
-                                    <input
-                                        type="email"
-                                        required
-                                        className="form-input"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Phone *</label>
-                                    <input
-                                        type="tel"
-                                        required
-                                        className="form-input"
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">CNIC *</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        className="form-input"
-                                        placeholder="XXXXX-XXXXXXX-X"
-                                        value={formData.cnic}
-                                        onChange={(e) => setFormData({ ...formData, cnic: e.target.value })}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Date of Birth</label>
-                                    <input
-                                        type="date"
-                                        className="form-input"
-                                        value={formData.dob}
-                                        onChange={(e) => setFormData({ ...formData, dob: e.target.value })}
-                                    />
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Gender</label>
-                                    <select
-                                        className="form-select"
-                                        value={formData.gender}
-                                        onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                                    >
-                                        <option value="">Select</option>
-                                        <option value="Male">Male</option>
-                                        <option value="Female">Female</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Blood Group</label>
-                                    <select
-                                        className="form-select"
-                                        value={formData.blood_group}
-                                        onChange={(e) => setFormData({ ...formData, blood_group: e.target.value })}
-                                    >
-                                        <option value="">Select</option>
-                                        <option value="A+">A+</option>
-                                        <option value="A-">A-</option>
-                                        <option value="B+">B+</option>
-                                        <option value="B-">B-</option>
-                                        <option value="AB+">AB+</option>
-                                        <option value="AB-">AB-</option>
-                                        <option value="O+">O+</option>
-                                        <option value="O-">O-</option>
-                                    </select>
-                                </div>
-                                <div className="form-group">
-                                    <label className="form-label">Card Expiry Date *</label>
-                                    <input
-                                        type="date"
-                                        required
-                                        className="form-input"
-                                        value={formData.expiry_date}
-                                        onChange={(e) => setFormData({ ...formData, expiry_date: e.target.value })}
-                                        min={new Date().toISOString().split('T')[0]}
-                                    />
-                                </div>
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">Address</label>
-                                <input
-                                    type="text"
-                                    className="form-input"
-                                    value={formData.address}
-                                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                />
-                            </div>
-                            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
-                                <button type="button" className="btn btn-outline" onClick={() => setShowModal(false)}>
-                                    Cancel
-                                </button>
-                                <button type="submit" className="btn btn-success">
-                                    Create User & Generate Card
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
+                <EnhancedUserForm
+                    onClose={() => setShowModal(false)}
+                    onSuccess={fetchUsers}
+                />
             )}
         </div>
     );

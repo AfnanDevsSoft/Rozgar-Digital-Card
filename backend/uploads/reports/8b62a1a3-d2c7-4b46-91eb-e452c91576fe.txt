@@ -1,0 +1,833 @@
+✅ PART 1 — PRODUCT, COMPLIANCE & REGULATORY GUIDANCE
+(WHY we do it this way — for founders, PMs, and audits)
+1. Product Identity Philosophy (Non-Negotiable)
+Rule of the system:
+• WhatsApp = User Presence & Device Proof
+• Email = Legal, Billing & Account Proof
+We do NOT treat WhatsApp as an account.
+We treat it as a communication channel only.
+Why this matters:
+• WhatsApp numbers change
+• WhatsApp has no identity assurance
+• Regulators do not accept WhatsApp as legal identity
+✅ This aligns with:
+• GDPR (EU/UK)
+• Stripe SaaS best practices
+• ISO 27001 (Access & Identity control)
+ 
+2. Why OTP on WhatsApp is Allowed (but Limited)
+We use WhatsApp OTP ONLY for:
+• Initial verification
+• Abuse prevention
+• Device + number validation
+We DO NOT:
+• Store passwords on WhatsApp
+• Do payments on WhatsApp
+• Do cancellations on WhatsApp
+📌 Reference:
+• WhatsApp Business Platform Policy
+• GDPR Art. 5 (data minimisation)
+ 
+3. Free Trial Limits (Compliance-Safe)
+Free trial is experience, not entitlement.
+Approved limits (choose ONE):
+• Max 3 voice notes
+• OR 5 total minutes
+• OR 7 calendar days
+Whichever comes first.
+Why:
+• Prevents abuse
+• Avoids “misleading free service” claims
+• Clear value discovery
+⚠️ Never unlimited free.
+ 
+4. Payments & Subscription Rules (STRICT)
+All payments must happen on the website.
+Why:
+• Stripe compliance
+• PCI-DSS
+• Consumer protection laws
+• Chargeback defense
+WhatsApp can only:
+• Show plan status
+• Redirect to website
+• Show usage (read-only)
+📌 Reference:
+• Stripe SaaS Guidelines
+• UK Consumer Contracts Regulations
+• ISO 27001 A.9 (Access control)
+ 
+5. Why Email is Mandatory for Paid Users
+Email is required for:
+• Invoices
+• Receipts
+• Refund notices
+• Legal communication
+• Account recovery
+• Audit trail
+No email = no paid plan.
+This is industry standard, not optional.
+ 
+6. What We Explicitly DO NOT Build (Tell Dev Clearly)
+❌ No subscription cancel inside WhatsApp
+❌ No payment collection inside WhatsApp
+❌ No refunds inside WhatsApp
+❌ No WhatsApp-only accounts
+❌ No anonymous recurring billing
+These are legal risk zones.
+ 
+7. Compliance Summary (For Auditors)
+Karsaaz Agent:
+• Uses data minimisation
+• Stores no raw audio
+• Uses passwordless login
+• Separates channel vs identity
+• Uses Stripe for billing
+• Provides clear user consent
+✔ GDPR
+✔ ISO-27001 aligned
+✔ WhatsApp Policy aligned
+✔ Stripe compliant
+ 
+🔧 PART 2 — TECHNICAL STEP-BY-STEP IMPLEMENTATION
+(WHAT the developer must build — exact flow)
+ 
+STEP 1 — WhatsApp Onboarding (Entry Gate)
+Trigger: User sends message to bot
+Flow:
+1. Generate OTP
+2. Send OTP via WhatsApp
+3. Verify OTP
+4. Create temporary user record
+{
+ "user_id": "uuid",
+ "whatsapp_number": "+44xxxx",
+ "whatsapp_verified": true,
+ "account_status": "TRIAL",
+ "email": null
+}
+ 
+STEP 2 — Trial Usage Enforcement
+Each voice message:
+• Check remaining trial quota
+• If available → process
+• If exceeded → block + redirect
+trial_minutes_used
+trial_message_count
+trial_expires_at
+ 
+STEP 3 — Paywall Trigger (Soft Stop)
+When limit reached:
+• WhatsApp message with Subscribe button
+• Link includes secure token
+Example:
+https://karsaazagent.com/subscribe?token=XYZ
+Token maps to user_id.
+ 
+STEP 4 — Website Login (Email Binding)
+Preferred Method: Email OTP (Passwordless)
+Flow:
+1. User enters email
+2. Send OTP to email
+3. Verify OTP
+4. Bind email to user
+{
+ "email": "user@email.com",
+ "email_verified": true,
+ "login_method": "EMAIL_OTP"
+}
+Optional:
+• Google OAuth (same binding rules)
+ 
+STEP 5 — WhatsApp + Email Binding (LOCK)
+Once email verified:
+• Lock WhatsApp number
+• Lock email
+• Enable billing
+{
+ "whatsapp_locked": true,
+ "email_locked": true,
+ "billing_enabled": true
+}
+⚠️ One WhatsApp → One Email → One User ID
+ 
+STEP 6 — Stripe Subscription
+Stripe flow:
+• Create customer
+• Attach email
+• Create subscription
+• Store subscription ID
+{
+ "stripe_customer_id": "cus_xxx",
+ "subscription_id": "sub_xxx",
+ "plan": "BUSINESS"
+}
+ 
+STEP 7 — WhatsApp After Payment
+WhatsApp shows:
+• Plan name
+• Remaining minutes
+• Link to manage billing (website)
+❌ No billing actions inside WhatsApp.
+ 
+STEP 8 — CRM & Audit Logs
+Every action logs:
+• Timestamp
+• User ID
+• Action
+• Source (WhatsApp / Web)
+ISO-ready.
+ 
+🧠 FINAL MESSAGE FOR YOUR DEVELOPER (You can paste this)
+“Build WhatsApp as a controlled entry channel, not an account system.
+Email is mandatory for paid users.
+Stripe handles money.
+WhatsApp never handles payments, cancellations, or refunds.
+Every user must end up with ONE WhatsApp + ONE email + ONE user ID.
+No exceptions.”
+ 
+If you want next:
+• ✅ Database schema (tables + fields)
+• ✅ WhatsApp message wording (legal-safe)
+• ✅ Website UI copy (compliance-friendly)
+• ✅ Free-trial config table
+ 
+ 
+1) ✅ Database Schema (Minimal + Compliance-Safe)
+A) users
+Purpose: Core identity (email = legal anchor)
+• id (UUID, PK)
+• email (varchar, unique, nullable until paid)
+• email_verified (bool, default false)
+• primary_login_method (enum: EMAIL_OTP, GOOGLE_OAUTH)
+• status (enum: TRIAL, ACTIVE, SUSPENDED, CLOSED)
+• created_at, updated_at
+• last_login_at
+• timezone (varchar, nullable)
+• locale (varchar, nullable)
+Rules
+• Paid/Active کیلئے email + email_verified=true لازمی
+• Trial میں email=null allowed
+ 
+B) whatsapp_identities
+Purpose: WhatsApp as channel proof (not legal identity)
+• id (UUID, PK)
+• user_id (UUID, FK -> users.id)
+• wa_number_e164 (varchar, unique) // +44…
+• wa_verified (bool, default false)
+• wa_verified_at (timestamp, nullable)
+• link_status (enum: PENDING, LINKED, BLOCKED)
+• last_seen_at (timestamp)
+Rules
+• One WhatsApp number → One user_id (unique)
+ 
+C) otp_challenges
+Purpose: OTP tracking (rate limit + audit)
+• id (UUID, PK)
+• channel (enum: WHATSAPP, EMAIL)
+• destination (varchar) // phone or email
+• code_hash (varchar)
+• expires_at (timestamp)
+• attempts (int, default 0)
+• max_attempts (int, default 5)
+• status (enum: SENT, VERIFIED, EXPIRED, LOCKED)
+• created_at
+• verified_at (timestamp, nullable)
+• ip (varchar, nullable)
+• user_agent (text, nullable)
+Rules
+• OTP plaintext store نہ کریں—hash only
+• attempts exceed → LOCKED
+ 
+D) plans
+Purpose: Your product catalog
+• id (UUID, PK)
+• code (varchar, unique) // FREE, BASIC, BUSINESS
+• monthly_minutes (int)
+• price_cents (int)
+• currency (varchar) // GBP/AED/USD
+• is_active (bool)
+ 
+E) subscriptions
+Purpose: Stripe state = source of truth
+• id (UUID, PK)
+• user_id (UUID, FK)
+• plan_id (UUID, FK)
+• stripe_customer_id (varchar)
+• stripe_subscription_id (varchar, unique)
+• status (enum: TRIALING, ACTIVE, PAST_DUE, CANCELED, UNPAID)
+• current_period_start (timestamp)
+• current_period_end (timestamp)
+• cancel_at_period_end (bool, default false)
+• created_at, updated_at
+Rule
+• Website “Manage Billing” صرف Stripe portal link دے
+ 
+F) usage_ledger
+Purpose: minutes consumption (audit + disputes)
+• id (UUID, PK)
+• user_id (UUID, FK)
+• source (enum: WHATSAPP, TELEGRAM, WEB)
+• event_type (enum: TRANSCRIBE, SUMMARY, TTS)
+• minutes_billed (decimal(10,2))
+• request_id (varchar, unique) // idempotency
+• created_at
+ 
+G) trial_policy
+Purpose: Trial rules (no code change)
+• id (UUID, PK)
+• max_messages (int) default 3
+• max_minutes (decimal(10,2)) default 5.00
+• max_days (int) default 7
+• enforced_mode (enum: FIRST_HIT_WINS, ALL)
+o FIRST_HIT_WINS = جو پہلے limit hit ہو، trial بند
+o ALL = تینوں limit check ہوں
+ 
+H) audit_logs
+Purpose: ISO/GDPR audit trail
+• id (UUID, PK)
+• user_id (UUID, nullable)
+• actor (enum: USER, SYSTEM, ADMIN)
+• action (varchar) // OTP_SENT, WA_LINKED, SUB_CREATED
+• metadata_json (json)
+• created_at
+• ip (varchar, nullable)
+Rule
+• No audio content in logs
+ 
+2) ✅ WhatsApp Message Wording (Legal-Safe + Simple)
+A) First Contact (Before OTP)
+Bot:
+“Hi! I can convert voice notes to text & short summaries.
+To start, I’ll verify this number with a one-time code.
+Reply: start”
+ 
+B) OTP Send
+Bot:
+“Your verification code is: 123456
+It expires in 5 minutes.
+If you didn’t request this, ignore this message.”
+ 
+C) Trial Active (After OTP Verified)
+Bot:
+“✅ Verified. You’re on Free Trial.
+Send a voice note now.
+Trial limits apply (minutes/messages).”
+(یہاں long policy نہ لکھیں—بس short)
+ 
+D) Trial Limit Hit (Paywall)
+Bot:
+“You’ve reached your free trial limit.
+To continue, upgrade here: [Subscribe]
+Billing is handled on our website for security.”
+ 
+E) Paid User Reminder (Email Required)
+Bot (when user tries paid without email):
+“To activate a paid plan, we need an email for receipts & account access.
+Tap [Complete Signup].”
+ 
+F) Plan / Usage Commands (Read-Only)
+/usage
+“Plan: BUSINESS
+Remaining minutes: 120
+Manage billing: [Open Website]”
+/profile
+“Name: …
+Email: …
+WhatsApp: Linked”
+ 
+G) Cancellation/Refund Handling (Stay clean)
+If user asks cancel in WhatsApp:
+“For security, subscription changes are managed on the website: [Manage Subscription]”
+No debate. No extra text.
+ 
+3) ✅ Developer Guardrails (Must Implement)
+Rate Limits
+• WhatsApp OTP: max 3 per hour per number
+• Email OTP: max 5 per hour per email
+• Voice processing: per plan quota
+Data Retention (Simple but safe)
+• Raw audio: do not persist
+• Transcripts/summaries: store only if user enabled “Notes”
+• Logs: keep metadata only, no content
+Consent
+Website signup page checkbox:
+• “I agree to Terms & Privacy Policy”
+• “I consent to processing voice notes to generate text/summaries”
+ 
+4) Quick Decisions (So team doesn’t stall)
+✅ Best default:
+• Trial via WhatsApp OTP
+• Paid via Email OTP (passwordless) + Stripe
+• Google OAuth optional later
+❌ Don’t do:
+• “Paid via WhatsApp OTP only”
+• “Cancel inside WhatsApp”
+ 
+ 
+PART 3/3 — Technical Implementation (APIs + Webhooks + Compliance Text)
+1) ✅ API Endpoints (Backend Contract)
+A) WhatsApp OTP (Trial Identity Proof)
+POST /v1/auth/wa/start
+• Input: { wa_number_e164 }
+• Action: create otp_challenges (WHATSAPP), send OTP via WhatsApp template
+• Output: { challenge_id, expires_at }
+POST /v1/auth/wa/verify
+• Input: { challenge_id, otp_code }
+• Action:
+o verify OTP hash
+o upsert users (if not exist) in TRIAL
+o upsert whatsapp_identities link to user
+o create session
+• Output: { session_token, user_id, status:"TRIAL" }
+Security
+• OTP hash only
+• attempts lock
+• anti-bruteforce by IP + wa_number
+ 
+B) Email Login (Paid Anchor / Compliance Anchor)
+POST /v1/auth/email/start
+• Input: { email }
+• Action: send Email OTP
+• Output: { challenge_id }
+POST /v1/auth/email/verify
+• Input: { challenge_id, otp_code }
+• Action:
+o verify email
+o set users.email, email_verified=true
+o if WhatsApp already linked → merge into same user_id
+• Output: { session_token, user_id }
+Merge Rule (important)
+• If email OTP verified and WA already linked under another trial user:
+o require a “link-confirm” step inside WhatsApp or a signed one-time token from website
+o then merge user records safely (prevent account takeover)
+ 
+C) WhatsApp Linking (Website → WhatsApp)
+POST /v1/link/wa/create-code
+• Auth: logged-in user (website)
+• Output: { link_code, expires_at } (6 digits or short code)
+POST /v1/link/wa/confirm
+• Called when user sends: link CODE on WhatsApp
+• Input: { wa_number_e164, link_code }
+• Action: attach WA number to logged-in user_id (from link_code record)
+• Output: { linked:true }
+Why this is gold:
+اس سے WhatsApp پر کبھی “paid identity” نہیں بنتی، صرف channel link بنتا ہے۔ compliance strong.
+ 
+D) Usage + Quota
+GET /v1/usage/summary
+• Output: { plan, minutes_remaining, period_end }
+POST /v1/usage/consume
+• Input: { request_id, event_type, minutes_billed, source }
+• Action: insert into usage_ledger (idempotent by request_id)
+ 
+E) Voice Processing (internal)
+POST /v1/voice/process
+• Input: { source, audio_url, output_mode, lang_primary, lang_secondary }
+• Flow:
+1. fetch audio stream
+2. transcribe (Whisper)
+3. summarise (<=5 bullets)
+4. optional TTS if premium
+5. write usage_ledger
+• Output: { transcript, summary, audio_summary_url? }
+Critical Compliance Rule
+• audio_url is temporary signed URL
+• audio deleted immediately after processing (no persistence)
+ 
+2) ✅ Stripe Webhook Mapping (Source of Truth)
+Webhook Endpoint
+POST /v1/webhooks/stripe
+• Verify signature (Stripe signing secret mandatory)
+Events to Handle
+1. checkout.session.completed
+• Create/attach stripe_customer_id
+• Create subscription record (status pending until sub event)
+2. customer.subscription.created
+• Upsert subscriptions
+• status → ACTIVE or TRIALING
+3. customer.subscription.updated
+• Update status, cancel_at_period_end, period dates
+4. invoice.payment_succeeded
+• Keep as confirmation; update ACTIVE
+5. invoice.payment_failed
+• status → PAST_DUE
+• WhatsApp message: “Payment issue — manage billing on website”
+6. customer.subscription.deleted
+• status → CANCELED
+• downgrade access
+Access Rules (Enforcement)
+• ACTIVE/TRIALING → allow premium features
+• PAST_DUE → grace period (e.g., 3 days) then restrict
+• CANCELED/UNPAID → restrict to free mode
+ 
+3) ✅ Trial Limits (Recommended Defaults)
+یہ safe بھی ہے اور user-friendly بھی:
+• max_messages = 3
+• max_minutes = 5.0
+• max_days = 7
+• Enforcement: FIRST_HIT_WINS
+Why:
+Trial abuse کم، support load کم، اور “ہم نے free دے دیا تھا” والا drama ختم۔
+ 
+4) ✅ WhatsApp Business API Compliance (Your Bot Reality)
+Must do
+• OTP as approved WhatsApp template (transactional)
+• Opt-in: user sends “start” first (or website opt-in) before you message
+• Provide “STOP” / “UNSUBSCRIBE” command
+• No marketing spam to cold users
+Don’t do
+• “Paid subscription management inside WhatsApp”
+• Long terms/policies as chat spam
+ 
+5) ✅ Short Legal/Compliance Copy (Website Only)
+A) Terms (Short)
+Service Description
+“KarsaazAgent converts user-submitted voice notes into text and short summaries.”
+No Legal Reliance
+“Outputs may contain errors. Do not rely on summaries as legal, medical, or financial advice.”
+User Responsibility
+“You confirm you have the right to share the audio content you submit.”
+Subscription
+“Payments and subscription changes are managed via our website billing portal.”
+Refunds
+“Refund policy is defined on the billing page and applies per plan.”
+ 
+B) Privacy (Short)
+Data We Process
+• WhatsApp number (for linking)
+• Email (for account + receipts)
+• Usage metrics (minutes, plan)
+• Transcripts/summaries only if Notes is enabled
+Audio Retention
+“We do not store raw audio after processing.”
+Lawful Basis
+• Contract performance (providing service)
+• Legitimate interests (security, fraud prevention)
+• Consent (optional features like Notes)
+User Rights
+• Access, deletion, export requests through support email (legal domain)
+ 
+C) WhatsApp In-Chat Minimal Disclosures (1–2 lines only)
+When user first starts:
+“By using this bot, you agree to our Terms and Privacy Policy: [link].”
+بس۔ ختم۔ WhatsApp پر law lecture نہیں۔
+ 
+6) ✅ ISO/GDPR/PDPL “Must-Have Controls” (Dev Checklist)
+• ✅ Audit logs for auth/link/subscription actions
+• ✅ No raw audio storage
+• ✅ Data minimization: WhatsApp used as channel, not identity
+• ✅ Access control: admin actions logged
+• ✅ Encryption in transit (TLS) + encryption at rest
+• ✅ DPA/contracts with processors (Stripe + WhatsApp provider + OpenAI/Whisper provider)
+• ✅ DPIA-lite doc (1 pager) for launch
+ 
+7) Final Recommended Architecture Decision (So you don’t overthink)
+Trial: WhatsApp OTP ✅
+Paid: Email OTP + Stripe ✅
+WhatsApp: channel link only ✅
+Cancel/Refund: website only ✅
+Policies: website only ✅
+WhatsApp text: minimal + commands only ✅
+ 
+Karsaaz Agent — Developer Handoff (v1.0)
+Goal: WhatsApp-first product experience, website-only for legal + billing, email mandatory for paid, Stripe as source of truth.
+0) Non-Negotiables (Do / Don’t)
+✅ DO
+• WhatsApp = interaction + trial
+• Website = signup + consent + billing + cancel/refund
+• Email = mandatory for paid
+• Stripe Checkout + Webhooks = subscription truth
+• Minimal WhatsApp legal text + commands that link to website
+❌ DON’T
+• No payments in WhatsApp
+• No cancel/refund in WhatsApp
+• No recurring without verified email
+• No raw audio storage
+• No storing OTP plaintext (hash only)
+ 
+1) Identity Model (Binding Rules)
+• Primary channel: WhatsApp number (E.164)
+• Legal/Billing identity: Email (verified) + Stripe customer/subscription IDs
+• Binding: 1 WhatsApp ↔ 1 user_id ↔ 1 email (for paid)
+States:
+• TRIAL: WhatsApp verified, email can be null
+• ACTIVE: email_verified = true AND Stripe subscription ACTIVE/TRIALING
+• PAST_DUE/CANCELED: restrict premium
+ 
+2) Trial Limits (Default)
+Choose FIRST_HIT_WINS enforcement:
+• max voice notes: 3
+• max minutes: 5.0
+• max days: 7
+When any limit hits → show Subscribe CTA (website link with token).
+ 
+3) Minimal DB Tables (Must Have)
+• users(id, email, email_verified, status, created_at…)
+• whatsapp_identities(user_id, wa_number_e164 unique, wa_verified…)
+• otp_challenges(channel, destination, code_hash, expires_at, attempts, status…)
+• plans(code, monthly_minutes, price_cents, currency…)
+• subscriptions(user_id, stripe_customer_id, stripe_subscription_id unique, status, period_start/end, cancel_at_period_end…)
+• usage_ledger(user_id, request_id unique, event_type, minutes_billed, created_at…)
+• audit_logs(user_id, action, metadata_json, created_at, ip…)
+ 
+4) API Endpoints (Contract)
+WhatsApp OTP
+• POST /v1/auth/wa/start {wa_number_e164} → send OTP (WA template), returns challenge_id
+• POST /v1/auth/wa/verify {challenge_id, otp} → create/return user_id, set TRIAL
+Email OTP (Paid anchor)
+• POST /v1/auth/email/start {email} → send email OTP
+• POST /v1/auth/email/verify {challenge_id, otp} → set email_verified=true
+Linking (Website → WhatsApp)
+• POST /v1/link/wa/create-code (auth) → {link_code}
+• POST /v1/link/wa/confirm {wa_number_e164, link_code} → bind WA to user
+Usage
+• GET /v1/usage/summary
+• POST /v1/usage/consume {request_id, event_type, minutes_billed} (idempotent)
+Voice Processing
+• POST /v1/voice/process {audio_url, output_mode, lang_primary, lang_secondary, source}
+o fetch stream → transcribe → summarize (<=5 bullets) → optional TTS (premium)
+o delete audio immediately after processing
+o write usage_ledger
+ 
+5) Stripe Webhooks (Source of Truth)
+Endpoint: POST /v1/webhooks/stripe (verify signature)
+Handle:
+• checkout.session.completed → attach customer id
+• customer.subscription.created/updated/deleted → upsert subscription status/periods
+• invoice.payment_succeeded → ensure ACTIVE
+• invoice.payment_failed → PAST_DUE (+ WhatsApp notice linking billing page)
+Access gating:
+• ACTIVE/TRIALING → premium ON
+• PAST_DUE → grace 3 days → then restrict
+• CANCELED/UNPAID → restrict to free
+ 
+6) Website Pages (Minimal)
+1. /signup
+o Email OTP login
+o Consent checkboxes (not pre-checked):
+▪ Terms + Privacy
+▪ Recurring billing consent (only on paid)
+2. /subscribe
+o Stripe Checkout
+3. /billing
+o Stripe Customer Portal (manage/cancel/refund policy link)
+4. /privacy /terms /contact
+Rule: user can use WhatsApp trial without email, but cannot subscribe without verified email.
+ 
+7) WhatsApp Bot Copy (Minimal, Safe)
+Start
+“Hi! I convert voice notes to text & short summaries. Reply start to verify.”
+After verify
+“✅ Verified. You’re on Free Trial. Send a voice note.”
+Limit reached
+“Trial limit reached. Upgrade securely here: [Subscribe]. Billing is managed on our website.”
+Cancel request in WA
+“For security, subscription changes are managed on our website: [Manage Billing].”
+Commands (read-only):
+• help/menu, usage, plan, profile, how
+Optional compliance commands (link-only):
+• privacy, terms, delete (delete triggers website flow or support email)
+ 
+8) Security & Compliance Controls
+• OTP: hash only + attempts lock + rate limits
+• No raw audio persistence
+• Encrypt at rest + TLS
+• Audit logs for: OTP sent/verified, link created/confirmed, subscription changes, admin actions
+• Data minimization: WA is channel, email is billing anchor
+• Do not claim WhatsApp/Telegram affiliation
+ 
+9) Definition of Done (Launch Gate)
+• Trial limits enforced ✅
+• Subscribe requires verified email ✅
+• Stripe webhooks fully synced ✅
+• Billing portal works ✅
+• WhatsApp shows only read-only billing status ✅
+• Privacy/Terms accessible ✅
+• Audio not stored ✅
+• Audit logs exist ✅
+ 
+ 
+1) Sequence Diagrams
+A) WhatsApp Trial (OTP) → Free Use
+User -> WhatsApp Bot: "start"
+Bot -> Backend: /auth/wa/start (wa_number)
+Backend -> WhatsApp API: Send OTP template
+User -> Bot: "otp 123456"
+Bot -> Backend: /auth/wa/verify
+Backend -> DB: upsert user(TRIAL) + whatsapp_identity(LINKED)
+Backend -> Bot: "Verified + Trial active"
+User -> Bot: (forwards voice note)
+Bot -> Backend: /voice/process (audio_url)
+Backend -> Whisper: transcribe
+Backend -> LLM: summarize <=5 bullets
+Backend -> DB: usage_ledger consume
+Backend -> Bot: transcript + summary
+B) Trial Limit Hit → Subscribe (Website) → Auto Access
+Backend -> Bot: "Trial limit reached" + [Subscribe link with token]
+ 
+User -> Website: /subscribe?token=XYZ
+Website -> Backend: validate token -> user_id
+Website -> Backend: /auth/email/start
+Backend -> Email: send OTP
+User -> Website: enter OTP
+Website -> Backend: /auth/email/verify (bind email)
+Website -> Stripe: Checkout
+Stripe -> Backend(webhook): checkout.session.completed
+Stripe -> Backend(webhook): customer.subscription.created
+Backend -> DB: subscriptions ACTIVE + user ACTIVE
+Backend -> WhatsApp Bot: "✅ Plan active" (optional)
+User -> Bot: send voice -> premium allowed
+C) Renewal / Payment Failure (Stripe → WhatsApp Notice)
+Stripe -> Backend(webhook): invoice.payment_failed
+Backend -> DB: subscription PAST_DUE
+Backend -> WhatsApp Bot: "Payment issue. Manage billing: [link]"
+(Grace period)
+Stripe -> Backend(webhook): invoice.payment_succeeded
+Backend -> DB: ACTIVE
+ 
+2) JSON Payload Samples (copy-paste ready)
+A) /v1/auth/wa/start
+Request
+{ "wa_number_e164": "+971501234567" }
+Response
+{ "challenge_id": "ch_wa_01H...", "expires_at": "2025-12-13T09:10:00Z" }
+B) /v1/auth/wa/verify
+Request
+{ "challenge_id": "ch_wa_01H...", "otp_code": "123456" }
+Response
+{
+ "session_token": "sess_01H...",
+ "user_id": "usr_01H...",
+ "status": "TRIAL",
+ "whatsapp_verified": true
+}
+C) /v1/link/wa/create-code (Website auth)
+Response
+{ "link_code": "A93K21", "expires_at": "2025-12-13T09:30:00Z" }
+D) /v1/link/wa/confirm
+Request
+{ "wa_number_e164": "+971501234567", "link_code": "A93K21" }
+Response
+{ "linked": true, "user_id": "usr_01H..." }
+E) /v1/auth/email/start
+Request
+{ "email": "user@example.com" }
+Response
+{ "challenge_id": "ch_em_01H...", "expires_at": "2025-12-13T09:12:00Z" }
+F) /v1/auth/email/verify
+Request
+{ "challenge_id": "ch_em_01H...", "otp_code": "829104" }
+Response
+{ "session_token": "sess_01H...", "user_id": "usr_01H...", "email_verified": true }
+G) /v1/voice/process
+Request
+{
+ "source": "WHATSAPP",
+ "audio_url": "https://cdn.../signed-url",
+ "output_mode": "TEXT_ONLY",
+ "lang_primary": "en",
+ "lang_secondary": "ur",
+ "request_id": "req_20251213_000001"
+}
+Response
+{
+ "transcript": "....",
+ "summary_bullets": ["...", "...", "..."],
+ "audio_summary_url": null
+}
+H) /v1/usage/consume (idempotent)
+Request
+{
+ "request_id": "req_20251213_000001",
+ "event_type": "SUMMARY",
+ "minutes_billed": 0.75,
+ "source": "WHATSAPP"
+}
+Response
+{ "accepted": true }
+ 
+3) Stripe Webhook Samples (minimum fields you must use)
+A) checkout.session.completed
+{
+ "type": "checkout.session.completed",
+ "data": { "object": {
+   "id": "cs_test_...",
+   "customer": "cus_...",
+   "metadata": { "user_id": "usr_01H..." }
+ }}
+}
+B) customer.subscription.created
+{
+ "type": "customer.subscription.created",
+ "data": { "object": {
+   "id": "sub_...",
+   "customer": "cus_...",
+   "status": "active",
+   "current_period_start": 1765610000,
+   "current_period_end": 1768288400,
+   "cancel_at_period_end": false,
+   "metadata": { "user_id": "usr_01H..." }
+ }}
+}
+C) invoice.payment_failed
+{
+ "type": "invoice.payment_failed",
+ "data": { "object": {
+   "customer": "cus_...",
+   "subscription": "sub_..."
+ }}
+}
+Implementation rules
+• Webhook signature verify لازمی
+• subscription status کا source = Stripe (DB نہیں)
+ 
+4) QA / Test Plan (Launch Gate Checklist)
+A) WhatsApp OTP & Trial
+• OTP send works (template approved)
+• OTP expires at 5 min
+• Max attempts lock (5 tries)
+• Rate limit: 3 OTP/hour/number
+• After verify user created (TRIAL)
+• Trial minutes/messages decrement correctly
+• Trial limit hit triggers Subscribe CTA
+• Trial cannot be reset by reinstall (number-based + heuristics)
+B) Linking & Account Binding
+• Website link_code binds correct WA number
+• Expired link_code rejected
+• link_code single-use only
+• One WA cannot link to multiple users
+• One email cannot bind to multiple users (unless you explicitly allow)
+• Merge safety: if email already in use → prompt “login instead” (no takeover)
+C) Email OTP + Paid Activation
+• Email OTP send/verify works
+• Paid checkout blocked until email_verified=true
+• Consent checkbox required (not pre-ticked)
+• After payment: webhook updates subscription ACTIVE
+• WhatsApp premium features unlocked only after webhook (not after redirect)
+D) Stripe Billing & Renewals
+• payment_succeeded keeps ACTIVE
+• payment_failed switches to PAST_DUE + WhatsApp notice
+• Grace period logic works (e.g., 3 days)
+• After grace: premium locked
+• Cancellation in Stripe portal reflects in product access (webhook)
+• Refund flow does not break access incorrectly (define rules)
+E) Data Handling & Security
+• Raw audio never stored (verify no S3 bucket persistence)
+• Signed audio URL TTL short (e.g., 5–10 min)
+• Logs never contain audio/transcript content
+• PII minimized (store WA + email only)
+• /delete deletes transcripts/notes + unlinks WA (policy-defined)
+• Admin actions are audited
+F) UX & Illiterate User Checks
+• WhatsApp messages short, clear
+• Subscribe flow is max 2–3 screens
+• Manage billing link always available
+• No scary legal paragraphs in WhatsApp
+ 
+5) Edge Cases (Must test)
+• SIM change / number recycled → block takeover (require re-verify + email match)
+• User tries to subscribe without email → forced email step
+• User links wrong WhatsApp number → reject (must match verified number)
+• Duplicate webhook events → idempotent updates
+ 

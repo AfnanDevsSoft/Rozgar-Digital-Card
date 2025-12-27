@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
+import path from 'path';
 import { PrismaClient } from '@prisma/client';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './swagger.js';
@@ -22,6 +23,7 @@ import discountRoutes from './routes/discount.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import labStaffRoutes from './routes/labStaff.routes.js';
 import testCatalogRoutes from './routes/testCatalog.routes.js';
+import uploadRoutes from './routes/upload.routes.js';
 
 // Initialize Express app
 const app: Express = express();
@@ -35,8 +37,8 @@ app.use(helmet({
     contentSecurityPolicy: false // Disable for Swagger UI
 }));
 app.use(cors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003'],
-    credentials: true
+    origin: ['http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003'],
+    credentials: true,
 }));
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
@@ -57,9 +59,12 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 }));
 
 // Health check endpoint
-app.get('/health', (_req: Request, res: Response) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/health', (req: Request, res: Response) => {
+    res.status(200).json({ status: 'OK', message: 'Health Card System API is running' });
 });
+
+// Serve static files from uploads directory (must be before /api routes)
+app.use('/api/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -72,6 +77,7 @@ app.use('/api/discount', discountRoutes);
 app.use('/api/admins', adminRoutes);
 app.use('/api/lab-staff', labStaffRoutes);
 app.use('/api/test-catalog', testCatalogRoutes);
+app.use('/api/upload', uploadRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

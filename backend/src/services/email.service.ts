@@ -5,56 +5,56 @@
 import nodemailer from 'nodemailer';
 
 interface EmailOptions {
-    to: string;
-    subject: string;
-    text?: string;
-    html?: string;
+  to: string;
+  subject: string;
+  text?: string;
+  html?: string;
 }
 
 // Create transporter
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-    }
+  host: process.env.SMTP_HOST || 'smtp.gmail.com',
+  port: parseInt(process.env.SMTP_PORT || '587'),
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
 });
 
 /**
  * Send email
  */
 export const sendEmail = async (options: EmailOptions): Promise<boolean> => {
-    try {
-        await transporter.sendMail({
-            from: process.env.SMTP_USER || 'noreply@healthcard.com',
-            to: options.to,
-            subject: options.subject,
-            text: options.text,
-            html: options.html
-        });
-        console.log(`📧 Email sent to: ${options.to}`);
-        return true;
-    } catch (error) {
-        console.error('❌ Email sending failed:', error);
-        return false;
-    }
+  try {
+    await transporter.sendMail({
+      from: process.env.SMTP_USER || 'noreply@healthcard.com',
+      to: options.to,
+      subject: options.subject,
+      text: options.text,
+      html: options.html
+    });
+    console.log(`📧 Email sent to: ${options.to}`);
+    return true;
+  } catch (error) {
+    console.error('❌ Email sending failed:', error);
+    return false;
+  }
 };
 
 /**
  * Send report ready notification
  */
 export const sendReportNotification = async (
-    userEmail: string,
-    userName: string,
-    labName: string,
-    testName: string,
-    portalUrl: string
+  userEmail: string,
+  userName: string,
+  labName: string,
+  testName: string,
+  portalUrl: string
 ): Promise<boolean> => {
-    const subject = '🏥 Your Lab Report is Ready';
+  const subject = '🏥 Your Lab Report is Ready';
 
-    const html = `
+  const html = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -111,22 +111,22 @@ export const sendReportNotification = async (
     </html>
   `;
 
-    return sendEmail({ to: userEmail, subject, html });
+  return sendEmail({ to: userEmail, subject, html });
 };
 
 /**
  * Send welcome email with credentials
  */
 export const sendWelcomeEmail = async (
-    userEmail: string,
-    userName: string,
-    serialNumber: string,
-    tempPassword: string,
-    portalUrl: string
+  userEmail: string,
+  userName: string,
+  serialNumber: string,
+  tempPassword: string,
+  portalUrl: string
 ): Promise<boolean> => {
-    const subject = '🎉 Welcome to Digital Health Card';
+  const subject = '🎉 Welcome to Digital Health Card';
 
-    const html = `
+  const html = `
     <!DOCTYPE html>
     <html>
     <head>
@@ -183,5 +183,109 @@ export const sendWelcomeEmail = async (
     </html>
   `;
 
-    return sendEmail({ to: userEmail, subject, html });
+  return sendEmail({ to: userEmail, subject, html });
 };
+
+/**
+ * Send transaction/billing notification
+ */
+export const sendTransactionNotification = async (
+  userEmail: string,
+  userName: string,
+  labName: string,
+  testName: string,
+  originalAmount: number,
+  discount: number,
+  finalAmount: number,
+  receiptNumber: string,
+  portalUrl: string
+): Promise<boolean> => {
+  const subject = '💳 Transaction Confirmation - Health Card Discount Applied';
+
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: Arial, sans-serif; background-color: #f5f5f5; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; padding: 30px; }
+        .header { text-align: center; border-bottom: 2px solid #16a34a; padding-bottom: 20px; }
+        .header h1 { color: #16a34a; margin: 0; }
+        .content { padding: 20px 0; }
+        .info-box { background: #f8f9fa; border-radius: 8px; padding: 15px; margin: 15px 0; }
+        .info-row { display: flex; justify-content: space-between; margin: 8px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 8px; }
+        .info-row:last-child { border-bottom: none; }
+        .label { color: #666; }
+        .value { font-weight: bold; }
+        .savings { background: #d1fae5; border: 2px solid #10b981; border-radius: 8px; padding: 15px; margin: 20px 0; text-align: center; }
+        .savings h3 { color: #047857; margin: 0 0 10px 0; }
+        .savings .amount { font-size: 24px; font-weight: bold; color: #047857; }
+        .total { font-size: 20px; color: #1a73e8; }
+        .button { display: inline-block; background: #16a34a; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin-top: 20px; }
+        .footer { text-align: center; color: #999; font-size: 12px; margin-top: 30px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>💳 Payment Confirmation</h1>
+        </div>
+        <div class="content">
+          <p>Dear <strong>${userName}</strong>,</p>
+          <p>Thank you for using your Digital Health Card! Here's your transaction summary:</p>
+          
+          <div class="info-box">
+            <div class="info-row">
+              <span class="label">Receipt Number:</span>
+              <span class="value">${receiptNumber}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Lab:</span>
+              <span class="value">${labName}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Test:</span>
+              <span class="value">${testName}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Date:</span>
+              <span class="value">${new Date().toLocaleDateString()}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Original Amount:</span>
+              <span class="value">Rs. ${originalAmount.toFixed(2)}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">Discount (${discount}%):</span>
+              <span class="value" style="color: #16a34a;">- Rs. ${(originalAmount * discount / 100).toFixed(2)}</span>
+            </div>
+            <div class="info-row" style="background: #eff6ff; margin: 10px -15px 0 -15px; padding: 15px; border-radius: 0 0 8px 8px;">
+              <span class="label" style="font-size: 16px;">Amount Paid:</span>
+              <span class="value total">Rs. ${finalAmount.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <div class="savings">
+            <h3>🎉 Your Health Card Savings</h3>
+            <div class="amount">Rs. ${(originalAmount - finalAmount).toFixed(2)}</div>
+            <p style="margin: 5px 0 0 0; color: #065f46;">You saved ${discount}% on this visit!</p>
+          </div>
+          
+          <p>Your lab reports will be available in your portal once they're ready. We'll send you another email notification.</p>
+          
+          <center>
+            <a href="${portalUrl}" class="button">View Transaction History</a>
+          </center>
+        </div>
+        <div class="footer">
+          <p>This is an automated message from Digital Health Card System.</p>
+          <p>Please keep this email for your records.</p>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  return sendEmail({ to: userEmail, subject, html });
+};
+

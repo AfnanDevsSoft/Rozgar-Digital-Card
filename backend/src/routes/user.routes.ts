@@ -16,13 +16,29 @@ const router = Router();
 // Validation schema
 const createUserSchema = z.object({
     name: z.string().min(2),
+    father_name: z.string().optional(),
+    guardian_name: z.string().optional(),
     email: z.string().email(),
     phone: z.string().min(10),
+    whatsapp_number: z.string().optional(),
+    alternative_number: z.string().optional(),
     cnic: z.string().min(13),
     address: z.string().optional(),
+    town: z.string().optional(),
     dob: z.string().optional(),
     gender: z.string().optional(),
     blood_group: z.string().optional(),
+    eligibility_type: z.enum(['DIFFERENTIABLE_PERSON', 'LOW_INCOME_FAMILY']).optional(),
+    disability_type: z.enum(['PHYSICAL', 'VISUAL', 'HEARING', 'MENTALLY', 'OTHER']).optional(),
+    disability_other_comment: z.string().optional(),
+    has_disability_certificate: z.boolean().optional(),
+    monthly_income: z.number().optional(),
+    family_members_count: z.number().optional(),
+    current_health_condition: z.string().optional(),
+    cnic_front_photo: z.string().optional(),
+    cnic_back_photo: z.string().optional(),
+    disability_certificate_photo: z.string().optional(),
+    passport_photo: z.string().optional(),
     expiry_date: z.string(), // Card expiry date
     password: z.string().min(6).optional()
 });
@@ -143,8 +159,8 @@ router.post('/', authMiddleware, requireAdmin, async (req: AuthRequest, res: Res
             return;
         }
 
-        // Generate password if not provided
-        const tempPassword = data.password || `${data.name.split(' ')[0]}@${data.phone.slice(-4)}`;
+        // Generate default password "user123" for all new users
+        const tempPassword = 'user123';
         const passwordHash = await bcrypt.hash(tempPassword, 12);
 
         // Generate serial number
@@ -154,14 +170,31 @@ router.post('/', authMiddleware, requireAdmin, async (req: AuthRequest, res: Res
         const user = await prisma.user.create({
             data: {
                 name: data.name,
+                father_name: data.father_name,
+                guardian_name: data.guardian_name,
                 email: data.email,
                 phone: data.phone,
+                whatsapp_number: data.whatsapp_number,
+                alternative_number: data.alternative_number,
                 cnic: data.cnic,
                 address: data.address,
+                town: data.town,
                 dob: data.dob ? new Date(data.dob) : null,
                 gender: data.gender,
                 blood_group: data.blood_group,
+                eligibility_type: data.eligibility_type,
+                disability_type: data.disability_type,
+                disability_other_comment: data.disability_other_comment,
+                has_disability_certificate: data.has_disability_certificate || false,
+                monthly_income: data.monthly_income,
+                family_members_count: data.family_members_count,
+                current_health_condition: data.current_health_condition,
+                cnic_front_photo: data.cnic_front_photo,
+                cnic_back_photo: data.cnic_back_photo,
+                disability_certificate_photo: data.disability_certificate_photo,
+                passport_photo: data.passport_photo,
                 password_hash: passwordHash,
+                must_change_password: true,  // Force password change on first login
                 health_card: {
                     create: {
                         serial_number: serialNumber,
@@ -207,18 +240,41 @@ router.post('/', authMiddleware, requireAdmin, async (req: AuthRequest, res: Res
  */
 router.put('/:id', authMiddleware, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        const { name, email, phone, address, dob, gender, blood_group } = req.body;
+        const {
+            name, father_name, guardian_name, email, phone, whatsapp_number,
+            alternative_number, address, town, dob, gender, blood_group,
+            eligibility_type, disability_type, disability_other_comment,
+            has_disability_certificate, monthly_income, family_members_count,
+            current_health_condition, cnic_front_photo, cnic_back_photo,
+            disability_certificate_photo, passport_photo
+        } = req.body;
 
         const user = await prisma.user.update({
             where: { id: req.params.id },
             data: {
                 name,
+                father_name,
+                guardian_name,
                 email,
                 phone,
+                whatsapp_number,
+                alternative_number,
                 address,
+                town,
                 dob: dob ? new Date(dob) : undefined,
                 gender,
-                blood_group
+                blood_group,
+                eligibility_type,
+                disability_type,
+                disability_other_comment,
+                has_disability_certificate,
+                monthly_income,
+                family_members_count,
+                current_health_condition,
+                cnic_front_photo,
+                cnic_back_photo,
+                disability_certificate_photo,
+                passport_photo
             },
             include: { health_card: true }
         });

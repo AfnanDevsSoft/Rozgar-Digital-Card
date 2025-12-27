@@ -1,5 +1,6 @@
 /**
  * Report Management Routes
+ * Supports batch upload per invoice with duplicate prevention
  */
 
 import { Router, Response } from 'express';
@@ -44,7 +45,7 @@ const upload = multer({
  */
 router.post('/', authMiddleware, requireLabAccess, upload.any(), async (req: AuthRequest, res: Response) => {
     try {
-        const { transaction_id } = req.body;
+        const { transaction_id, receipt_number } = req.body;
         const files = req.files as Express.Multer.File[];
 
         if (!transaction_id) {
@@ -77,6 +78,24 @@ router.post('/', authMiddleware, requireLabAccess, upload.any(), async (req: Aut
             return;
         }
 
+        // Check if invoice already has reports uploaded (prevent duplicates)
+        const invoiceReceiptNumber = receipt_number || transaction.receipt_number;
+        const existingUpload = await prisma.uploadedInvoice.findUnique({
+            where: { receipt_number: invoiceReceiptNumber }
+        });
+
+        if (existingUpload) {
+            res.status(400).json({
+                error: 'Reports already uploaded for this invoice',
+                message: `Invoice ${invoiceReceiptNumber} already has reports uploaded on ${existingUpload.uploaded_at.toLocaleDateString()}`,
+                uploaded_at: existingUpload.uploaded_at
+            });
+            return;
+        }
+
+        // Generate batch ID for this upload session
+        const batchId = `batch-${Date.now()}-${transaction.id.slice(0, 8)}`;
+
         // Save files and create report records
         const reports = [];
 
@@ -97,12 +116,22 @@ router.post('/', authMiddleware, requireLabAccess, upload.any(), async (req: Aut
                     file_url: result.fileUrl!,
                     file_type: result.fileType!,
                     file_size: result.fileSize!,
+                    uploaded_in_batch: files.length > 1,
+                    batch_id: batchId,
                     status: 'UPLOADED'
                 }
             });
 
             reports.push(report);
         }
+
+        // Mark invoice as uploaded to prevent future duplicates
+        await prisma.uploadedInvoice.create({
+            data: {
+                receipt_number: invoiceReceiptNumber,
+                lab_id: transaction.lab_id
+            }
+        });
 
         // Send email notification to user
         const portalUrl = process.env.USER_PORTAL_URL || 'http://localhost:3003';
@@ -115,8 +144,9 @@ router.post('/', authMiddleware, requireLabAccess, upload.any(), async (req: Aut
         );
 
         res.status(201).json({
-            message: 'Reports uploaded successfully',
+            message: `${files.length} report(s) uploaded successfully`,
             reports,
+            batch_id: batchId,
             notification_sent: true
         });
     } catch (error) {

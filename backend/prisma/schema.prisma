@@ -36,37 +36,70 @@ enum ReportStatus {
   DELIVERED
 }
 
+enum EligibilityType {
+  DIFFERENTIABLE_PERSON
+  LOW_INCOME_FAMILY
+}
+
+enum DisabilityType {
+  PHYSICAL
+  VISUAL
+  HEARING
+  MENTALLY
+  OTHER
+}
+
 // Admin model - for Super Admin and Branch Admin
 model Admin {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  password_hash String
-  name          String
-  role          Role     @default(BRANCH_ADMIN)
-  lab_id        String?
-  lab           Lab?     @relation(fields: [lab_id], references: [id])
-  is_active     Boolean  @default(true)
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  id                  String    @id @default(uuid())
+  email               String    @unique
+  password_hash       String
+  name                String
+  role                Role      @default(BRANCH_ADMIN)
+  lab_id              String?
+  lab                 Lab?      @relation(fields: [lab_id], references: [id])
+  is_active           Boolean   @default(true)
+  must_change_password Boolean  @default(true)
+  password_changed_at DateTime?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
 
   @@map("admins")
 }
 
 // User model - card holders
 model User {
-  id            String        @id @default(uuid())
-  name          String
-  email         String        @unique
-  phone         String
-  cnic          String        @unique
-  address       String?
-  dob           DateTime?
-  gender        String?
-  blood_group   String?
-  password_hash String
-  is_active     Boolean       @default(true)
-  created_at    DateTime      @default(now())
-  updated_at    DateTime      @updatedAt
+  id                         String           @id @default(uuid())
+  name                       String
+  father_name                String?
+  guardian_name              String?
+  email                      String           @unique
+  phone                      String
+  whatsapp_number            String?
+  alternative_number         String?
+  cnic                       String           @unique
+  address                    String?
+  town                       String?
+  dob                        DateTime?
+  gender                     String?
+  blood_group                String?
+  eligibility_type           EligibilityType?
+  disability_type            DisabilityType?
+  disability_other_comment   String?
+  has_disability_certificate Boolean          @default(false)
+  monthly_income             Decimal?         @db.Decimal(10, 2)
+  family_members_count       Int?
+  current_health_condition   String?
+  cnic_front_photo           String?
+  cnic_back_photo            String?
+  disability_certificate_photo String?
+  passport_photo             String?
+  password_hash              String
+  must_change_password       Boolean          @default(true)
+  password_changed_at        DateTime?
+  is_active                  Boolean          @default(true)
+  created_at                 DateTime         @default(now())
+  updated_at                 DateTime         @updatedAt
 
   health_card   HealthCard?
   transactions  Transaction[]
@@ -106,26 +139,29 @@ model Lab {
   created_at    DateTime  @default(now())
   updated_at    DateTime  @updatedAt
 
-  admins       Admin[]
-  staff        LabStaff[]
-  tests        TestCatalog[]
-  transactions Transaction[]
-  reports      Report[]
+  admins           Admin[]
+  staff            LabStaff[]
+  tests            TestCatalog[]
+  transactions     Transaction[]
+  reports          Report[]
+  uploaded_invoices UploadedInvoice[]
 
   @@map("labs")
 }
 
 // Lab Staff model (Receptionists)
 model LabStaff {
-  id            String   @id @default(uuid())
-  lab_id        String
-  lab           Lab      @relation(fields: [lab_id], references: [id], onDelete: Cascade)
-  name          String
-  email         String   @unique
-  password_hash String
-  is_active     Boolean  @default(true)
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
+  id                  String    @id @default(uuid())
+  lab_id              String
+  lab                 Lab       @relation(fields: [lab_id], references: [id], onDelete: Cascade)
+  name                String
+  email               String    @unique
+  password_hash       String
+  is_active           Boolean   @default(true)
+  must_change_password Boolean  @default(true)
+  password_changed_at DateTime?
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
 
   @@map("lab_staff")
 }
@@ -169,19 +205,21 @@ model Transaction {
 
 // Report model
 model Report {
-  id             String       @id @default(uuid())
-  transaction_id String
-  transaction    Transaction  @relation(fields: [transaction_id], references: [id])
-  user_id        String
-  user           User         @relation(fields: [user_id], references: [id])
-  lab_id         String
-  lab            Lab          @relation(fields: [lab_id], references: [id])
-  file_name      String
-  file_url       String
-  file_type      String
-  file_size      Int
-  status         ReportStatus @default(PENDING)
-  uploaded_at    DateTime     @default(now())
+  id               String       @id @default(uuid())
+  transaction_id   String
+  transaction      Transaction  @relation(fields: [transaction_id], references: [id])
+  user_id          String
+  user             User         @relation(fields: [user_id], references: [id])
+  lab_id           String
+  lab              Lab          @relation(fields: [lab_id], references: [id])
+  file_name        String
+  file_url         String
+  file_type        String
+  file_size        Int
+  uploaded_in_batch Boolean     @default(false)
+  batch_id         String?
+  status           ReportStatus @default(PENDING)
+  uploaded_at      DateTime     @default(now())
 
   @@map("reports")
 }
@@ -203,4 +241,15 @@ model ReceiptCounter {
   count Int    @default(0)
 
   @@map("receipt_counters")
+}
+
+// Uploaded Invoice Tracker - prevents duplicate report uploads
+model UploadedInvoice {
+  id             String   @id @default(uuid())
+  receipt_number String   @unique
+  lab_id         String
+  lab            Lab      @relation(fields: [lab_id], references: [id])
+  uploaded_at    DateTime @default(now())
+
+  @@map("uploaded_invoices")
 }

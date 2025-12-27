@@ -256,4 +256,41 @@ router.get('/stats', authMiddleware, requireAdmin, async (_req: AuthRequest, res
     }
 });
 
+/**
+ * Generate and download card PDF
+ * POST /api/cards/:id/print
+ */
+router.post('/:id/print', authMiddleware, requireAdmin, async (req: AuthRequest, res: Response) => {
+    try {
+        const card = await prisma.healthCard.findUnique({
+            where: { id: req.params.id },
+            include: { user: true }
+        });
+
+        if (!card) {
+            res.status(404).json({ error: 'Card not found' });
+            return;
+        }
+
+        // Import card service (dynamic to avoid circular dependency)
+        const { generateHealthCardPDF } = await import('../services/card.service.js');
+
+        const result = await generateHealthCardPDF({ ...card.user, health_card: card });
+
+        if (!result.success) {
+            res.status(500).json({ error: result.error || 'Failed to generate card PDF' });
+            return;
+        }
+
+        res.json({
+            message: 'Card PDF generated successfully',
+            file_url: result.filePath,
+            download_url: `${process.env.API_URL || 'http://localhost:4000'}${result.filePath}`
+        });
+    } catch (error) {
+        console.error('Print card error:', error);
+        res.status(500).json({ error: 'Failed to print card' });
+    }
+});
+
 export default router;

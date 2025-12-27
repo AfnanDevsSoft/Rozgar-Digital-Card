@@ -1,0 +1,29 @@
+multi selction of test whhile assigning test to user
+while addding test discount add their
+card print 
+- 200x300mm
+card front design and back design save in docs/CARD.jpg , docs/CARD-02.jpg
+
+card fields which visible in card
+Card No
+Name
+Chic
+Valid 
+Sign
+adddress : PMML House Plot No:D-18, P.E.C.H.S Block 6, Nursery Shahrah-e-Faisal Karachi
+
+test add details
+test name
+category
+price
+discount percentage
+
+one file upload of user using invoice so next time that invoice will not show while uploading report
+
+report section in lab portal
+
+report print in A4 size but lab name will print on receipt 
+
+pasword must be tempory for all user "user123" then when user or lab login first time with that so first show scren to change password then proceed
+
+billing or reports uploaded messsage send to user

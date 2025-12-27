@@ -1,48 +1,37 @@
 'use client';
 
+/**
+ * Enhanced Billing with Multi-Test Selection
+ * Allows selecting multiple tests in a single transaction
+ */
+
 import { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useSearchParams } from 'next/navigation';
 import { RootState } from '@/store/store';
 import { setCurrentPage } from '@/store/slices/uiSlice';
 import { cardsAPI, transactionsAPI, testsAPI, Test } from '@/lib/api';
 import toast from 'react-hot-toast';
-import { Search, Receipt, Printer, CheckCircle, AlertCircle } from 'lucide-react';
+import { Search, Receipt, Printer, CheckCircle, AlertCircle, Plus, X } from 'lucide-react';
 
-interface CardInfo {
-    card: { serial_number: string; status: string; expiry_date: string };
-    user: { name: string; email: string; phone: string };
-    discountEligible: boolean;
+interface SelectedTest extends Test {
+    quantity: number;
 }
 
-interface Transaction {
-    receipt_number: string;
-    test_name: string;
-    original_amount: number;
-    discount_percentage: number;
-    discount_amount: number;
-    final_amount: number;
-    created_at: string;
-}
-
-export default function BillingPage() {
+export default function EnhancedBillingPage() {
     const dispatch = useDispatch();
-    const searchParams = useSearchParams();
     const user = useSelector((state: RootState) => state.auth.user);
     const receiptRef = useRef<HTMLDivElement>(null);
 
-    const [serial, setSerial] = useState(searchParams.get('serial') || '');
-    const [cardInfo, setCardInfo] = useState<CardInfo | null>(null);
+    const [serial, setSerial] = useState('');
+    const [cardInfo, setCardInfo] = useState<any>(null);
     const [tests, setTests] = useState<Test[]>([]);
-    const [selectedTest, setSelectedTest] = useState<Test | null>(null);
+    const [selectedTests, setSelectedTests] = useState<SelectedTest[]>([]);
     const [loading, setLoading] = useState(false);
-    const [discountPreview, setDiscountPreview] = useState<any>(null);
-    const [transaction, setTransaction] = useState<Transaction | null>(null);
+    const [transaction, setTransaction] = useState<any>(null);
 
     useEffect(() => {
         dispatch(setCurrentPage('Billing'));
         if (user?.lab_id) fetchTests();
-        if (searchParams.get('serial')) verifyCard();
     }, [dispatch, user]);
 
     const fetchTests = async () => {
@@ -68,28 +57,51 @@ export default function BillingPage() {
         }
     };
 
-    const handleTestSelect = async (test: Test) => {
-        setSelectedTest(test);
-        if (cardInfo?.discountEligible) {
-            try {
-                const res = await transactionsAPI.calculate(Number(test.price));
-                setDiscountPreview(res.data);
-            } catch (error) {
-                console.error('Failed to calculate discount:', error);
-            }
+    const addTest = (test: Test) => {
+        const existing = selectedTests.find(t => t.id === test.id);
+        if (existing) {
+            setSelectedTests(selectedTests.map(t =>
+                t.id === test.id ? { ...t, quantity: t.quantity + 1 } : t
+            ));
         } else {
-            setDiscountPreview(null);
+            setSelectedTests([...selectedTests, { ...test, quantity: 1 }]);
         }
     };
 
+    const removeTest = (testId: string) => {
+        setSelectedTests(selectedTests.filter(t => t.id !== testId));
+    };
+
+    const updateQuantity = (testId: string, quantity: number) => {
+        if (quantity < 1) return;
+        setSelectedTests(selectedTests.map(t =>
+            t.id === testId ? { ...t, quantity } : t
+        ));
+    };
+
+    const calculateTotals = () => {
+        const original = selectedTests.reduce((sum, t) => sum + (Number(t.price) * t.quantity), 0);
+        const discountPercent = cardInfo?.discountEligible ? (user?.lab?.discount_rate || 0) : 0;
+        const discount = (original * discountPercent) / 100;
+        const final = original - discount;
+
+        return { original, discountPercent, discount, final };
+    };
+
     const handleCreateBill = async () => {
-        if (!cardInfo || !selectedTest) return;
+        if (!cardInfo || selectedTests.length === 0) return;
+
+        const testNames = selectedTests.map(t =>
+            t.quantity > 1 ? `${t.name} (x${t.quantity})` : t.name
+        ).join(', ');
+
         setLoading(true);
         try {
+            const { original, final } = calculateTotals();
             const response = await transactionsAPI.create({
                 serial_number: cardInfo.card.serial_number,
-                test_name: selectedTest.name,
-                original_amount: Number(selectedTest.price),
+                test_name: testNames,
+                original_amount: original,
             });
             setTransaction(response.data.transaction);
             toast.success('Bill created successfully!');
@@ -101,45 +113,23 @@ export default function BillingPage() {
     };
 
     const handlePrint = () => {
-        const printContent = receiptRef.current;
-        if (!printContent) return;
-
-        const printWindow = window.open('', '_blank');
-        if (!printWindow) return;
-
-        printWindow.document.write(`
-      <html>
-        <head>
-          <title>Receipt - ${transaction?.receipt_number}</title>
-          <style>
-            body { font-family: 'Courier New', monospace; padding: 20px; max-width: 400px; margin: 0 auto; }
-            .header { text-align: center; margin-bottom: 20px; }
-            .divider { border-top: 1px dashed #000; margin: 12px 0; }
-            .row { display: flex; justify-content: space-between; margin: 8px 0; }
-            .total { font-weight: bold; font-size: 18px; }
-            .center { text-align: center; }
-          </style>
-        </head>
-        <body>${printContent.innerHTML}</body>
-      </html>
-    `);
-        printWindow.document.close();
-        printWindow.print();
+        window.print();
     };
 
     const handleNewBill = () => {
         setTransaction(null);
         setCardInfo(null);
-        setSelectedTest(null);
+        setSelectedTests([]);
         setSerial('');
-        setDiscountPreview(null);
     };
 
-    // Show receipt if transaction complete
+    const totals = calculateTotals();
+
+    // Receipt view
     if (transaction) {
         return (
             <div className="animate-fadeIn">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }} className="no-print">
                     <h1 style={{ fontSize: '24px', fontWeight: 700 }}>Bill Created Successfully!</h1>
                     <div style={{ display: 'flex', gap: '12px' }}>
                         <button className="btn btn-primary" onClick={handlePrint}>
@@ -152,32 +142,37 @@ export default function BillingPage() {
                     </div>
                 </div>
 
-                {/* Printable Receipt */}
-                <div className="card" style={{ maxWidth: '450px', margin: '0 auto' }}>
+                <div className="card" style={{ maxWidth: '210mm', margin: '0 auto' }}>
                     <div ref={receiptRef}>
-                        <div className="header" style={{ textAlign: 'center', marginBottom: '20px' }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 700 }}>{user?.lab?.name}</h2>
-                            <p style={{ fontSize: '12px', color: '#6b7280' }}>Digital Health Card Partner</p>
+                        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+                            <h2 style={{ fontSize: '24px', fontWeight: 700 }}>{user?.lab?.name}</h2>
+                            <p style={{ fontSize: '14px', color: '#6b7280' }}>Digital Health Card Partner</p>
                             <div style={{ borderTop: '2px dashed #e5e7eb', margin: '16px 0' }}></div>
-                            <p style={{ fontSize: '14px', fontFamily: 'monospace' }}>Receipt: <strong>{transaction.receipt_number}</strong></p>
-                            <p style={{ fontSize: '12px', color: '#6b7280' }}>{new Date(transaction.created_at).toLocaleString()}</p>
+                            <p style={{ fontSize: '16px', fontFamily: 'monospace' }}>Receipt: <strong>{transaction.receipt_number}</strong></p>
+                            <p style={{ fontSize: '12px', color: '#6b7280' }}>{new Date().toLocaleString()}</p>
                         </div>
 
-                        <div style={{ borderTop: '1px dashed #e5e7eb', margin: '16px 0' }}></div>
+                        <div style={{ marginBottom: '20px' }}>
+                            <p style={{ fontSize: '12px', color: '#6b7280' }}>Patient</p>
+                            <p style={{ fontWeight: 600, fontSize: '16px' }}>{cardInfo?.user.name}</p>
+                            <p style={{ fontSize: '14px', color: '#6b7280', fontFamily: 'monospace' }}>{cardInfo?.card.serial_number}</p>
+                        </div>
+
+                        <div style={{ borderTop: '1px solid #e5e7eb', margin: '16px 0' }}></div>
 
                         <div style={{ marginBottom: '16px' }}>
-                            <p style={{ fontSize: '12px', color: '#6b7280' }}>Patient</p>
-                            <p style={{ fontWeight: 500 }}>{cardInfo?.user.name}</p>
-                            <p style={{ fontSize: '12px', color: '#6b7280', fontFamily: 'monospace' }}>{cardInfo?.card.serial_number}</p>
+                            {selectedTests.map((test, idx) => (
+                                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                    <span>{test.name} {test.quantity > 1 && `(x${test.quantity})`}</span>
+                                    <span>Rs. {(Number(test.price) * test.quantity).toLocaleString()}</span>
+                                </div>
+                            ))}
                         </div>
 
-                        <div style={{ borderTop: '1px dashed #e5e7eb', margin: '16px 0' }}></div>
+                        <div style={{ borderTop: '1px dashed #e5e7eb', margin: '12px 0' }}></div>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                            <span>Test: {transaction.test_name}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                            <span>Original Amount</span>
+                            <span>Subtotal</span>
                             <span>Rs. {Number(transaction.original_amount).toLocaleString()}</span>
                         </div>
                         {Number(transaction.discount_amount) > 0 && (
@@ -189,15 +184,22 @@ export default function BillingPage() {
 
                         <div style={{ borderTop: '2px solid #0a0a0a', margin: '16px 0' }}></div>
 
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '20px', fontWeight: 700 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '24px', fontWeight: 700 }}>
                             <span>Total</span>
                             <span>Rs. {Number(transaction.final_amount).toLocaleString()}</span>
                         </div>
 
-                        <div style={{ borderTop: '1px dashed #e5e7eb', margin: '20px 0' }}></div>
-                        <p style={{ textAlign: 'center', fontSize: '12px', color: '#6b7280' }}>Thank you for choosing us!</p>
+                        <div style={{ borderTop: '1px dashed #e5e7eb', margin: '24px 0' }}></div>
+                        <p style={{ textAlign: 'center', fontSize: '14px', color: '#6b7280' }}>Thank you for choosing us!</p>
                     </div>
                 </div>
+
+                <style jsx global>{`
+                    @media print {
+                        .no-print { display: none !important; }
+                        @page { size: A4; margin: 20mm; }
+                    }
+                `}</style>
             </div>
         );
     }
@@ -206,7 +208,7 @@ export default function BillingPage() {
         <div className="animate-fadeIn">
             <div style={{ marginBottom: '24px' }}>
                 <h1 style={{ fontSize: '24px', fontWeight: 700 }}>Create Bill</h1>
-                <p style={{ color: '#6b7280', marginTop: '4px' }}>Verify card and select test to create a discounted bill</p>
+                <p style={{ color: '#6b7280', marginTop: '4px' }}>Select multiple tests and create a discounted bill</p>
             </div>
 
             {/* Step 1: Verify Card */}
@@ -242,57 +244,92 @@ export default function BillingPage() {
                 )}
             </div>
 
-            {/* Step 2: Select Test */}
+            {/* Step 2: Select Tests */}
             {cardInfo && (
-                <div className="card" style={{ marginBottom: '24px' }}>
-                    <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>Step 2: Select Test</h3>
-                    <select
-                        className="form-select"
-                        value={selectedTest?.id || ''}
-                        onChange={(e) => {
-                            const test = tests.find(t => t.id === e.target.value);
-                            if (test) handleTestSelect(test);
-                        }}
-                    >
-                        <option value="">Select a test...</option>
-                        {tests.map(test => (
-                            <option key={test.id} value={test.id}>
-                                {test.name} - Rs. {Number(test.price).toLocaleString()}
-                            </option>
-                        ))}
-                    </select>
+                <>
+                    <div className="card" style={{ marginBottom: '24px' }}>
+                        <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>Step 2: Select Tests</h3>
+                        <select
+                            className="form-select"
+                            onChange={(e) => {
+                                const test = tests.find(t => t.id === e.target.value);
+                                if (test) {
+                                    addTest(test);
+                                    e.target.value = '';
+                                }
+                            }}
+                        >
+                            <option value="">+ Add a test...</option>
+                            {tests.map(test => (
+                                <option key={test.id} value={test.id}>
+                                    {test.name} - Rs. {Number(test.price).toLocaleString()}
+                                </option>
+                            ))}
+                        </select>
 
-                    {selectedTest && (
-                        <div style={{ marginTop: '20px', padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                <span>Original Price</span>
-                                <span>Rs. {Number(selectedTest.price).toLocaleString()}</span>
-                            </div>
-                            {discountPreview && (
-                                <>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#16a34a' }}>
-                                        <span>Discount ({discountPreview.discount_percentage}%)</span>
-                                        <span>- Rs. {Number(discountPreview.discount_amount).toLocaleString()}</span>
-                                    </div>
-                                    <div style={{ borderTop: '2px solid #0a0a0a', marginTop: '12px', paddingTop: '12px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '18px' }}>
-                                            <span>Final Amount</span>
-                                            <span>Rs. {Number(discountPreview.final_amount).toLocaleString()}</span>
+                        {selectedTests.length > 0 && (
+                            <div style={{ marginTop: '20px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    {selectedTests.map(test => (
+                                        <div key={test.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+                                            <div style={{ flex: 1 }}>
+                                                <p style={{ fontWeight: 500 }}>{test.name}</p>
+                                                <p style={{ fontSize: '13px', color: '#6b7280' }}>Rs. {Number(test.price).toLocaleString()} each</p>
+                                            </div>
+                                            <input
+                                                type="number"
+                                                min="1"
+                                                value={test.quantity}
+                                                onChange={(e) => updateQuantity(test.id, parseInt(e.target.value))}
+                                                style={{ width: '70px', padding: '6px', borderRadius: '4px', border: '1px solid #d1d5db', textAlign: 'center' }}
+                                            />
+                                            <button
+                                                onClick={() => removeTest(test.id)}
+                                                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444' }}
+                                            >
+                                                <X size={20} />
+                                            </button>
                                         </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Summary */}
+                    {selectedTests.length > 0 && (
+                        <div className="card" style={{ marginBottom: '24px' }}>
+                            <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '16px' }}>Bill Summary</h3>
+                            <div style={{ padding: '16px', backgroundColor: '#f5f5f5', borderRadius: '8px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                    <span>Subtotal</span>
+                                    <span>Rs. {totals.original.toLocaleString()}</span>
+                                </div>
+                                {totals.discountPercent > 0 && (
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: '#16a34a' }}>
+                                        <span>Discount ({totals.discountPercent}%)</span>
+                                        <span>- Rs. {totals.discount.toLocaleString()}</span>
                                     </div>
-                                </>
-                            )}
+                                )}
+                                <div style={{ borderTop: '2px solid #0a0a0a', marginTop: '12px', paddingTop: '12px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 700, fontSize: '20px' }}>
+                                        <span>Total</span>
+                                        <span>Rs. {totals.final.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                className="btn btn-success btn-lg"
+                                onClick={handleCreateBill}
+                                disabled={loading}
+                                style={{ width: '100%', marginTop: '16px' }}
+                            >
+                                <Receipt size={20} />
+                                {loading ? 'Creating Bill...' : 'Create Bill & Generate Receipt'}
+                            </button>
                         </div>
                     )}
-                </div>
-            )}
-
-            {/* Create Bill Button */}
-            {cardInfo && selectedTest && (
-                <button className="btn btn-success btn-lg" onClick={handleCreateBill} disabled={loading} style={{ width: '100%' }}>
-                    <Receipt size={20} />
-                    {loading ? 'Creating Bill...' : 'Create Bill & Generate Receipt'}
-                </button>
+                </>
             )}
         </div>
     );
