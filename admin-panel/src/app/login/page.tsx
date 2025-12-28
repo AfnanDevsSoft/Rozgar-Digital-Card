@@ -223,22 +223,6 @@ export default function LoginPage() {
                             </>
                         )}
                     </button>
-                </form>
-
-                {/* Hint */}
-                <div
-                    style={{
-                        marginTop: '24px',
-                        padding: '12px',
-                        backgroundColor: '#f5f5f5',
-                        borderRadius: '8px',
-                        textAlign: 'center',
-                    }}
-                >
-                    <p style={{ fontSize: '12px', color: '#6b7280' }}>
-                        Default credentials: <strong>admin@system.com</strong> / <strong>Admin@123</strong>
-                    </p>
-                </div>
             </div>
 
             <style jsx>{`
