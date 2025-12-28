@@ -5,7 +5,7 @@
  * Includes all 18+ new fields, file uploads, and conditional logic
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Upload, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Cookies from 'js-cookie';
@@ -36,6 +36,7 @@ interface FormData {
     // Address
     address: string;
     town: string;
+    town_code: string;  // Town code for card serial number
 
     // Eligibility & Disability
     eligibility_type: string;
@@ -54,6 +55,7 @@ interface FormData {
 
 export default function EnhancedUserForm({ onClose, onSuccess }: EnhancedUserFormProps) {
     const [loading, setLoading] = useState(false);
+    const [towns, setTowns] = useState<Array<{ id: string, name: string, code: string }>>([]);
     const [formData, setFormData] = useState<FormData>({
         name: '',
         father_name: '',
@@ -68,6 +70,7 @@ export default function EnhancedUserForm({ onClose, onSuccess }: EnhancedUserFor
         blood_group: '',
         address: '',
         town: '',
+        town_code: '1',  // Default town code
         eligibility_type: '',
         disability_type: '',
         disability_other_comment: '',
@@ -77,6 +80,27 @@ export default function EnhancedUserForm({ onClose, onSuccess }: EnhancedUserFor
         current_health_condition: '',
         expiry_date: '',
     });
+
+    // Load towns on mount
+    useEffect(() => {
+        loadTowns();
+    }, []);
+
+    const loadTowns = async () => {
+        try {
+            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/towns?active=true`, {
+                headers: {
+                    'Authorization': `Bearer ${Cookies.get('admin_token')}`,
+                },
+            });
+            if (response.ok) {
+                const data = await response.json();
+                setTowns(data);
+            }
+        } catch (error) {
+            console.error('Failed to load towns:', error);
+        }
+    };
 
     // File uploads
     const [files, setFiles] = useState({
@@ -395,13 +419,30 @@ export default function EnhancedUserForm({ onClose, onSuccess }: EnhancedUserFor
                             />
                         </div>
                         <div className="form-group">
-                            <label className="form-label">Town/Area</label>
-                            <input
-                                type="text"
-                                className="form-input"
-                                value={formData.town}
-                                onChange={(e) => setFormData({ ...formData, town: e.target.value })}
-                            />
+                            <label className="form-label">Town *</label>
+                            <select
+                                className="form-select"
+                                value={formData.town_code}
+                                onChange={(e) => {
+                                    const selectedTown = towns.find(t => t.code === e.target.value);
+                                    setFormData({
+                                        ...formData,
+                                        town_code: e.target.value,
+                                        town: selectedTown?.name || ''
+                                    });
+                                }}
+                                required
+                            >
+                                <option value="">Select Town</option>
+                                {towns.map(town => (
+                                    <option key={town.id} value={town.code}>
+                                        {town.name} ({town.code})
+                                    </option>
+                                ))}
+                            </select>
+                            <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                                This will be used for card serial number generation
+                            </p>
                         </div>
                     </div>
 

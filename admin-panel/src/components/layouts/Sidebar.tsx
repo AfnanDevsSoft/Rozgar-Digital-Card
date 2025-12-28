@@ -20,6 +20,7 @@ import {
     Percent,
     ChevronLeft,
     ChevronRight,
+    MapPin,
 } from 'lucide-react';
 
 interface NavItem {
@@ -38,6 +39,7 @@ const navItems: NavItem[] = [
     { name: 'Transactions', href: '/dashboard/transactions', icon: <Receipt size={20} /> },
     { name: 'Reports', href: '/dashboard/reports', icon: <FileText size={20} /> },
     { name: 'Discount Settings', href: '/dashboard/settings/discount', icon: <Percent size={20} />, roles: ['SUPER_ADMIN'] },
+    { name: 'Towns', href: '/dashboard/settings/towns', icon: <MapPin size={20} />, roles: ['SUPER_ADMIN'] },
     { name: 'Settings', href: '/dashboard/settings', icon: <Settings size={20} /> },
 ];
 

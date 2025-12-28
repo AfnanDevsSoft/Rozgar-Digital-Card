@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setCurrentPage } from '@/store/slices/uiSlice';
 import Link from 'next/link';
-import { Percent, Settings as SettingsIcon, User } from 'lucide-react';
+import { Percent, Settings as SettingsIcon, User, MapPin } from 'lucide-react';
 
 export default function SettingsPage() {
     const dispatch = useDispatch();
@@ -18,6 +18,14 @@ export default function SettingsPage() {
     }, [dispatch]);
 
     const settingsLinks = [
+        {
+            title: 'Town Management',
+            description: 'Manage town codes for card serial numbers',
+            href: '/dashboard/settings/towns',
+            icon: <MapPin size={24} />,
+            color: '#9333ea',
+            bgColor: '#f3e8ff',
+        },
         {
             title: 'Discount Settings',
             description: 'Configure global discount rate and expired card rules',

@@ -119,10 +119,12 @@ docker-compose logs -f
 - Font: Inter
 
 ## 📋 Serial Number Format
-- Format: `DCDYYXXXXXXX` (e.g., DCD251234567)
-- DCD = Prefix
-- YY = Year (25 = 2025)
-- XXXXXXX = 7 unique digits
+- Format: `SSC-YYMM-TTTT-NNNN`
+- **SSC**: Prefix
+- **YYMM**: Year + Month (e.g., 2512 = December 2025)
+- **TTTT**: Town code (4 digits, zero-padded)
+- **NNNN**: Sequential number (4 digits, zero-padded)
+- Example: `SSC-2512-0001-0001`
 
 ## 🧾 Receipt Format
 - Format: `INV-YYYY-NNNNN` (e.g., INV-2025-00001)

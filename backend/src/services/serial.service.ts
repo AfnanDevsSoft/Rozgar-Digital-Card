@@ -1,32 +1,53 @@
 /**
  * Serial Number Generation Service
- * Format: DCD + YY (2-digit year) + 7 random digits
- * Example: DCD2512345678
+ * Format: SSC-YYMM-TTTT-NNNN
+ * - SSC: Static prefix
+ * - YYMM: Year (2 digits) + Month (2 digits)
+ * - TTTT: Town code (4 digits, zero-padded)
+ * - NNNN: Sequential number (4 digits, zero-padded)
+ * Example: SSC-2512-0001-0001
  */
 
 import { prisma } from '../app.js';
 
-export const generateSerialNumber = async (): Promise<string> => {
-    const year = new Date().getFullYear().toString().slice(-2);
-    let serialNumber: string;
-    let exists = true;
+export const generateSerialNumber = async (townCode: string): Promise<string> => {
+    const now = new Date();
+    const year = now.getFullYear(); // Full year (e.g., 2025)
+    const month = now.getMonth() + 1; // Month (1-12)
 
-    // Keep generating until we find a unique one
-    while (exists) {
-        const random = Math.floor(Math.random() * 10000000)
-            .toString()
-            .padStart(7, '0');
-        serialNumber = `DCD${year}${random}`;
+    // Format year and month as YYMM (e.g., 2512 for Dec 2025)
+    const yearStr = year.toString().slice(-2); // Last 2 digits
+    const monthStr = month.toString().padStart(2, '0'); // Zero-pad month
+    const yearMonth = `${yearStr}${monthStr}`; // e.g., "2512"
 
-        // Check if this serial number already exists
-        const existing = await prisma.healthCard.findUnique({
-            where: { serial_number: serialNumber }
-        });
+    // Ensure town code is 4 digits
+    const formattedTownCode = townCode.padStart(4, '0');
 
-        exists = !!existing;
-    }
+    // Get or create counter for this year/month/town combination
+    const counter = await prisma.cardCounter.upsert({
+        where: {
+            year_month_town_code: {
+                year,
+                month,
+                town_code: formattedTownCode
+            }
+        },
+        update: {
+            count: { increment: 1 }
+        },
+        create: {
+            year,
+            month,
+            town_code: formattedTownCode,
+            count: 1
+        }
+    });
 
-    return serialNumber!;
+    // Format sequence number (4 digits, zero-padded)
+    const sequence = counter.count.toString().padStart(4, '0');
+
+    // Construct final serial number: SSC-YYMM-TTTT-NNNN
+    return `SSC-${yearMonth}-${formattedTownCode}-${sequence}`;
 };
 
 /**

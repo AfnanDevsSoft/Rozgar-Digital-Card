@@ -109,7 +109,7 @@ Authorization: Bearer <your_token>
                                     type: 'object',
                                     required: ['serial_number', 'password'],
                                     properties: {
-                                        serial_number: { type: 'string', example: 'DCD250000001' },
+                                        serial_number: { type: 'string', example: 'SSC-2512-0001-0001' },
                                         password: { type: 'string' }
                                     }
                                 }
@@ -282,7 +282,7 @@ Authorization: Bearer <your_token>
                     tags: ['Health Cards'],
                     summary: 'Verify Card by Serial',
                     description: 'Verify a health card and check discount eligibility',
-                    parameters: [{ name: 'serial', in: 'path', required: true, schema: { type: 'string' }, example: 'DCD250000001' }],
+                    parameters: [{ name: 'serial', in: 'path', required: true, schema: { type: 'string' }, example: 'SSC-2512-0001-0001' }],
                     responses: {
                         '200': { description: 'Card details with discount eligibility' },
                         '404': { description: 'Card not found' }
@@ -459,7 +459,7 @@ Authorization: Bearer <your_token>
                                     type: 'object',
                                     required: ['serial_number', 'test_name', 'original_amount'],
                                     properties: {
-                                        serial_number: { type: 'string', example: 'DCD250000001' },
+                                        serial_number: { type: 'string', example: 'SSC-2512-0001-0001' },
                                         test_name: { type: 'string', example: 'Complete Blood Count' },
                                         original_amount: { type: 'number', example: 2000 }
                                     }

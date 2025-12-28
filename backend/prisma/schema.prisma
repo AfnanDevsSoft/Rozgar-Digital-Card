@@ -111,7 +111,7 @@ model User {
 // Health Card model
 model HealthCard {
   id            String     @id @default(uuid())
-  serial_number String     @unique // DCD2512345678
+  serial_number String     @unique // SSC-2512-0001-0001
   user_id       String     @unique
   user          User       @relation(fields: [user_id], references: [id], onDelete: Cascade)
   status        CardStatus @default(ACTIVE)
@@ -242,6 +242,32 @@ model ReceiptCounter {
   count Int    @default(0)
 
   @@map("receipt_counters")
+}
+
+// Town model for managing town codes
+model Town {
+  id         String   @id @default(uuid())
+  name       String
+  code       String   @unique // e.g., "0001", "0002"
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("towns")
+}
+
+// Card Counter for sequential card numbers per town per month
+model CardCounter {
+  id         String   @id @default(uuid())
+  year       Int
+  month      Int
+  town_code  String
+  count      Int      @default(0)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@unique([year, month, town_code])
+  @@map("card_counters")
 }
 
 // Uploaded Invoice Tracker - prevents duplicate report uploads

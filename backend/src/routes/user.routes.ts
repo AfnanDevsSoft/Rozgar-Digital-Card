@@ -25,6 +25,7 @@ const createUserSchema = z.object({
     cnic: z.string().min(13),
     address: z.string().optional(),
     town: z.string().optional(),
+    town_code: z.string().regex(/^\d{1,4}$/, 'Town code must be  1-4 digits').default('1'), // Town code for card number
     dob: z.string().optional(),
     gender: z.string().optional(),
     blood_group: z.string().optional(),
@@ -163,8 +164,8 @@ router.post('/', authMiddleware, requireAdmin, async (req: AuthRequest, res: Res
         const tempPassword = 'user123';
         const passwordHash = await bcrypt.hash(tempPassword, 12);
 
-        // Generate serial number
-        const serialNumber = await generateSerialNumber();
+        // Generate serial number with town code
+        const serialNumber = await generateSerialNumber(data.town_code || '1');
 
         // Create user and card in transaction
         const user = await prisma.user.create({
