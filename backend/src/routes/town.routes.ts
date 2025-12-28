@@ -4,7 +4,7 @@
  */
 
 import { Router, Response } from 'express';
-import { prisma } from '../app.js';
+import { prisma } from '../lib/prisma.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.middleware.js';
 import { requireAdmin } from '../middleware/rbac.middleware.js';
 import { z } from 'zod';
@@ -155,9 +155,15 @@ router.put('/:id', authMiddleware, requireAdmin, async (req: AuthRequest, res: R
  */
 router.delete('/:id', authMiddleware, requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
+        const townToDelete = await prisma.town.findUnique({ where: { id: req.params.id } });
+        if (!townToDelete) {
+            res.status(404).json({ error: 'Town not found' });
+            return;
+        }
+
         // Check if town is being used in card counters
         const usedInCards = await prisma.cardCounter.findFirst({
-            where: { town_code: (await prisma.town.findUnique({ where: { id: req.params.id } }))?.code }
+            where: { town_code: townToDelete.code }
         });
 
         if (usedInCards) {

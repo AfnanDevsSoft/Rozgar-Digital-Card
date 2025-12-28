@@ -4,7 +4,7 @@
 
 import { Router, Response } from 'express';
 import bcrypt from 'bcryptjs';
-import { prisma } from '../app.js';
+import { prisma } from '../lib/prisma.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.middleware.js';
 import { requireAdmin } from '../middleware/rbac.middleware.js';
 import { z } from 'zod';

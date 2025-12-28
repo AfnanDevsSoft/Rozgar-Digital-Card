@@ -3,7 +3,7 @@
  */
 
 import { Router, Response } from 'express';
-import { prisma } from '../app.js';
+import { prisma } from '../lib/prisma.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.middleware.js';
 import { requireLabAccess, requireAdmin } from '../middleware/rbac.middleware.js';
 import { calculateDiscount } from '../services/discount.service.js';

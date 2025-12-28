@@ -161,7 +161,7 @@ export default function TownsPage() {
                     <h1 style={{ fontSize: '24px', fontWeight: 700 }}>Town Management</h1>
                     <p style={{ color: '#6b7280', marginTop: '4px' }}>Manage town codes for card serial numbers</p>
                 </div>
-                <button className="btn-primary" onClick={() => setShowAddModal(true)}>
+                <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
                     <Plus size={18} />
                     Add Town
                 </button>
@@ -215,12 +215,14 @@ export default function TownsPage() {
                                 <td>{new Date(town.created_at).toLocaleDateString()}</td>
                                 <td>
                                     <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button className="btn-secondary" onClick={() => openEdit(town)}>
+                                        <button className="btn btn-ghost btn-sm" onClick={() => openEdit(town)} title="Edit">
                                             <Edit size={16} />
                                         </button>
                                         <button
-                                            className="btn-danger"
+                                            className="btn btn-ghost btn-sm"
                                             onClick={() => handleDelete(town.id)}
+                                            title="Delete"
+                                            style={{ color: '#ef4444' }}
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -241,23 +243,45 @@ export default function TownsPage() {
 
             {/* Add/Edit Modal */}
             {(showAddModal || editingTown) && (
-                <div className="modal-overlay" onClick={() => { setShowAddModal(false); setEditingTown(null); }}>
-                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                <div style={{
+                    position: 'fixed',
+                    inset: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 200,
+                    padding: '20px',
+                }}>
+                    <div style={{
+                        backgroundColor: '#ffffff',
+                        borderRadius: '16px',
+                        width: '100%',
+                        maxWidth: '500px',
+                        maxHeight: '90vh',
+                        overflow: 'auto',
+                        padding: '24px',
+                    }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                            <h2 style={{ fontSize: '20px', fontWeight: 700 }}>
-                                {editingTown ? 'Edit Town' : 'Add New Town'}
-                            </h2>
+                            <div>
+                                <h2 style={{ fontSize: '20px', fontWeight: 600 }}>
+                                    {editingTown ? 'Edit Town' : 'Add New Town'}
+                                </h2>
+                                <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>
+                                    {editingTown ? 'Update town details' : 'Create a new town for card serial numbers'}
+                                </p>
+                            </div>
                             <button
-                                onClick={() => { setShowAddModal(false); setEditingTown(null); }}
+                                onClick={() => { setShowAddModal(false); setEditingTown(null); setFormData({ name: '', code: '' }); }}
                                 style={{ background: 'none', border: 'none', cursor: 'pointer' }}
                             >
-                                <X size={20} />
+                                <X size={24} color="#6b7280" />
                             </button>
                         </div>
 
                         <form onSubmit={editingTown ? handleEdit : handleAdd}>
-                            <div className="form-group">
-                                <label className="form-label">Town Name</label>
+                            <div className="form-group" style={{ marginBottom: '20px' }}>
+                                <label className="form-label">Town Name *</label>
                                 <input
                                     type="text"
                                     className="form-input"
@@ -271,16 +295,16 @@ export default function TownsPage() {
                                 </p>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px' }}>
+                            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '24px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
                                 <button
                                     type="button"
-                                    className="btn-secondary"
-                                    onClick={() => { setShowAddModal(false); setEditingTown(null); }}
+                                    className="btn btn-outline"
+                                    onClick={() => { setShowAddModal(false); setEditingTown(null); setFormData({ name: '', code: '' }); }}
                                 >
                                     Cancel
                                 </button>
-                                <button type="submit" className="btn-primary">
-                                    {editingTown ? 'Update' : 'Create'} Town
+                                <button type="submit" className="btn btn-success">
+                                    {editingTown ? 'Update Town' : 'Create Town'}
                                 </button>
                             </div>
                         </form>

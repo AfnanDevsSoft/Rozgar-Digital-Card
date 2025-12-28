@@ -5,7 +5,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import Cookies from 'js-cookie';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://shifabackend.afnandevs.com/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 const api: AxiosInstance = axios.create({
     baseURL: API_URL,

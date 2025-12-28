@@ -5,7 +5,7 @@ import compression from 'compression';
 import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from './lib/prisma.js';
 import swaggerUi from 'swagger-ui-express';
 import { swaggerSpec } from './swagger.js';
 
@@ -30,9 +30,6 @@ import townRoutes from './routes/town.routes.js';
 const app: Express = express();
 const PORT = process.env.PORT || 4000;
 
-// Initialize Prisma
-export const prisma = new PrismaClient();
-
 // Trust proxy for Railway (needed for rate limiting and real IPs)
 app.set('trust proxy', 1);
 
@@ -48,6 +45,7 @@ app.use(cors({
         'https://new.afnandevs.com',
         'https://new1.afnandevs.com',
         'https://new2.afnandevs.com',
+        'https://new3.afnandevs.com',
         'http://localhost:3001',
         'http://localhost:3002',
         'http://localhost:3003'

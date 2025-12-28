@@ -2,7 +2,7 @@
  * Discount Calculation Service
  */
 
-import { prisma } from '../app.js';
+import { prisma } from '../lib/prisma.js';
 import { Decimal } from '@prisma/client/runtime/library';
 
 export interface DiscountResult {

@@ -3,7 +3,7 @@ const nextConfig = {
     reactStrictMode: true,
     output: 'standalone',
     env: {
-        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://shifabackend.afnandevs.com/api',
+        NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api',
     },
     async rewrites() {
         return [

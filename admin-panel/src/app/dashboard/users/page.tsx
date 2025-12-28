@@ -19,7 +19,6 @@ import {
     UserCheck,
     KeyRound,
     X,
-    Printer,
 } from 'lucide-react';
 
 export default function UsersPage() {
@@ -29,6 +28,8 @@ export default function UsersPage() {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [showModal, setShowModal] = useState(false);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
+    const [showViewModal, setShowViewModal] = useState(false);
     const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, pages: 0 });
 
     // Form state
@@ -122,34 +123,14 @@ export default function UsersPage() {
         }
     };
 
-    const handlePrintCard = async (user: User) => {
-        if (!user.health_card) {
-            toast.error('No health card found');
-            return;
-        }
+    const handleViewUser = (user: User) => {
+        setSelectedUser(user);
+        setShowViewModal(true);
+    };
 
-        try {
-            const token = localStorage.getItem('token');
-            const response = await fetch(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/cards/${user.health_card.id}/print`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                }
-            );
-
-            if (!response.ok) throw new Error('Failed to generate card');
-
-            const data = await response.json();
-            toast.success('Card PDF generated!');
-
-            // Open PDF in new tab
-            window.open(`${process.env.NEXT_PUBLIC_API_URL}${data.file_url}`, '_blank');
-        } catch (error) {
-            toast.error('Failed to print card');
-        }
+    const handleEditUser = (user: User) => {
+        setSelectedUser(user);
+        setShowModal(true);
     };
 
     return (
@@ -252,8 +233,19 @@ export default function UsersPage() {
                                         </td>
                                         <td>
                                             <div style={{ display: 'flex', gap: '8px' }}>
-                                                <button className="btn btn-ghost btn-sm" title="View">
+                                                <button
+                                                    className="btn btn-ghost btn-sm"
+                                                    title="View"
+                                                    onClick={() => handleViewUser(user)}
+                                                >
                                                     <Eye size={16} />
+                                                </button>
+                                                <button
+                                                    className="btn btn-ghost btn-sm"
+                                                    onClick={() => handleEditUser(user)}
+                                                    title="Edit"
+                                                >
+                                                    <Edit size={16} />
                                                 </button>
                                                 <button
                                                     className="btn btn-ghost btn-sm"
@@ -268,14 +260,6 @@ export default function UsersPage() {
                                                     title="Reset Password"
                                                 >
                                                     <KeyRound size={16} />
-                                                </button>
-                                                <button
-                                                    className="btn btn-ghost btn-sm"
-                                                    onClick={() => handlePrintCard(user)}
-                                                    title="Print Card"
-                                                    disabled={!user.health_card}
-                                                >
-                                                    <Printer size={16} />
                                                 </button>
                                             </div>
                                         </td>
@@ -315,9 +299,93 @@ export default function UsersPage() {
             {/* Enhanced User Form Modal */}
             {showModal && (
                 <EnhancedUserForm
-                    onClose={() => setShowModal(false)}
+                    onClose={() => { setShowModal(false); setSelectedUser(null); }}
                     onSuccess={fetchUsers}
+                    user={selectedUser}
                 />
+            )}
+
+            {/* View User Modal */}
+            {showViewModal && selectedUser && (
+                <div style={{
+                    position: 'fixed',
+                    inset: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 200,
+                    padding: '20px',
+                }}>
+                    <div style={{
+                        backgroundColor: '#ffffff',
+                        borderRadius: '16px',
+                        width: '100%',
+                        maxWidth: '600px',
+                        maxHeight: '90vh',
+                        overflow: 'auto',
+                        padding: '24px',
+                    }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                            <h2 style={{ fontSize: '20px', fontWeight: 600 }}>User Details</h2>
+                            <button onClick={() => { setShowViewModal(false); setSelectedUser(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                                <X size={24} color="#6b7280" />
+                            </button>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                            <div>
+                                <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Name</p>
+                                <p style={{ fontWeight: 500 }}>{selectedUser.name}</p>
+                            </div>
+                            <div>
+                                <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Email</p>
+                                <p>{selectedUser.email}</p>
+                            </div>
+                            <div>
+                                <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Phone</p>
+                                <p>{selectedUser.phone || '-'}</p>
+                            </div>
+                            <div>
+                                <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>CNIC</p>
+                                <p>{selectedUser.cnic || '-'}</p>
+                            </div>
+                            <div>
+                                <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Serial Number</p>
+                                <code style={{ backgroundColor: '#f3f4f6', padding: '4px 8px', borderRadius: '4px' }}>
+                                    {selectedUser.health_card?.serial_number || 'N/A'}
+                                </code>
+                            </div>
+                            <div>
+                                <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Card Status</p>
+                                <span className={`badge ${selectedUser.health_card?.status === 'ACTIVE' ? 'badge-success' : 'badge-danger'}`}>
+                                    {selectedUser.health_card?.status || 'No Card'}
+                                </span>
+                            </div>
+                            <div>
+                                <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Gender</p>
+                                <p>{selectedUser.gender || '-'}</p>
+                            </div>
+                            <div>
+                                <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Blood Group</p>
+                                <p>{selectedUser.blood_group || '-'}</p>
+                            </div>
+                            <div style={{ gridColumn: 'span 2' }}>
+                                <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Address</p>
+                                <p>{selectedUser.address || '-'}</p>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
+                            <button
+                                className="btn btn-outline"
+                                onClick={() => { setShowViewModal(false); setSelectedUser(null); }}
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
             )}
         </div>
     );

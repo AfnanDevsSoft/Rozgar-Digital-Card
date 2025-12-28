@@ -5,7 +5,7 @@
 
 import { Router, Response } from 'express';
 import multer from 'multer';
-import { prisma } from '../app.js';
+import { prisma } from '../lib/prisma.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.middleware.js';
 import { requireLabAccess, requireUser } from '../middleware/rbac.middleware.js';
 import { saveFile, deleteFile } from '../services/storage.service.js';

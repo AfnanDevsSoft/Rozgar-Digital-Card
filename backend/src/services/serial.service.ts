@@ -8,7 +8,7 @@
  * Example: SSC-2512-0001-0001
  */
 
-import { prisma } from '../app.js';
+import { prisma } from '../lib/prisma.js';
 
 export const generateSerialNumber = async (townCode: string): Promise<string> => {
     const now = new Date();

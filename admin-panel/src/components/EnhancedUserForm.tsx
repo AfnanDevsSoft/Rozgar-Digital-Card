@@ -13,18 +13,17 @@ import Cookies from 'js-cookie';
 interface EnhancedUserFormProps {
     onClose: () => void;
     onSuccess: () => void;
+    user?: any; // Optional user data for edit mode
 }
 
 interface FormData {
     // Basic Info
     name: string;
     father_name: string;
-    guardian_name: string;
     email: string;
 
     // Contact Info
     phone: string;
-    whatsapp_number: string;
     alternative_number: string;
 
     // Identity
@@ -53,32 +52,37 @@ interface FormData {
     expiry_date: string;
 }
 
-export default function EnhancedUserForm({ onClose, onSuccess }: EnhancedUserFormProps) {
+export default function EnhancedUserForm({ onClose, onSuccess, user }: EnhancedUserFormProps) {
+    const isEditMode = !!user;
     const [loading, setLoading] = useState(false);
     const [towns, setTowns] = useState<Array<{ id: string, name: string, code: string }>>([]);
     const [formData, setFormData] = useState<FormData>({
-        name: '',
-        father_name: '',
-        guardian_name: '',
-        email: '',
-        phone: '',
-        whatsapp_number: '',
-        alternative_number: '',
-        cnic: '',
-        dob: '',
-        gender: '',
-        blood_group: '',
-        address: '',
-        town: '',
-        town_code: '1',  // Default town code
-        eligibility_type: '',
-        disability_type: '',
-        disability_other_comment: '',
-        has_disability_certificate: false,
-        monthly_income: '',
-        family_members_count: '',
-        current_health_condition: '',
-        expiry_date: '',
+        name: user?.name || '',
+        father_name: user?.father_name || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
+        alternative_number: user?.alternative_number || '',
+        cnic: user?.cnic || '',
+        dob: user?.dob ? user.dob.split('T')[0] : '',
+        gender: user?.gender || '',
+        blood_group: user?.blood_group || '',
+        address: user?.address || '',
+        town: user?.town || '',
+        town_code: user?.town_code || '1',
+        eligibility_type: user?.eligibility_type || '',
+        disability_type: user?.disability_type || '',
+        disability_other_comment: user?.disability_other_comment || '',
+        has_disability_certificate: user?.has_disability_certificate || false,
+        monthly_income: user?.monthly_income?.toString() || '',
+        family_members_count: user?.family_members_count?.toString() || '',
+        current_health_condition: user?.current_health_condition || '',
+        expiry_date: user?.health_card?.expiry_date
+            ? user.health_card.expiry_date.split('T')[0]
+            : (() => {
+                const date = new Date();
+                date.setFullYear(date.getFullYear() + 1);
+                return date.toISOString().split('T')[0];
+            })(),
     });
 
     // Load towns on mount
@@ -165,6 +169,21 @@ export default function EnhancedUserForm({ onClose, onSuccess }: EnhancedUserFor
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validate Gmail email
+        const gmailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+        if (!gmailPattern.test(formData.email)) {
+            toast.error('Only Gmail addresses (@gmail.com) are accepted');
+            return;
+        }
+
+        // Validate CNIC format
+        const cnicPattern = /^\d{5}-\d{7}-\d{1}$/;
+        if (!cnicPattern.test(formData.cnic)) {
+            toast.error('CNIC must be in format: XXXXX-XXXXXXX-X (e.g., 42101-3003303-2)');
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -189,23 +208,28 @@ export default function EnhancedUserForm({ onClose, onSuccess }: EnhancedUserFor
                 }
             });
 
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${Cookies.get('admin_token')}`,
-                },
-                body: JSON.stringify(userData),
-            });
+            const response = await fetch(
+                isEditMode
+                    ? `${process.env.NEXT_PUBLIC_API_URL}/users/${user.id}`
+                    : `${process.env.NEXT_PUBLIC_API_URL}/users`,
+                {
+                    method: isEditMode ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${Cookies.get('admin_token')}`,
+                    },
+                    body: JSON.stringify(userData),
+                }
+            );
 
             if (!response.ok) {
                 const error = await response.json();
-                throw new Error(error.error || 'Failed to create user');
+                throw new Error(error.error || (isEditMode ? 'Failed to update user' : 'Failed to create user'));
             }
 
             const result = await response.json();
 
-            toast.success('User created successfully!');
+            toast.success(isEditMode ? 'User updated successfully!' : 'User created successfully!');
 
             // Show credentials
             if (result.credentials) {
@@ -261,9 +285,11 @@ export default function EnhancedUserForm({ onClose, onSuccess }: EnhancedUserFor
                     zIndex: 10,
                 }}>
                     <div>
-                        <h2 style={{ fontSize: '20px', fontWeight: 600 }}>Create New User & Health Card</h2>
+                        <h2 style={{ fontSize: '20px', fontWeight: 600 }}>
+                            {isEditMode ? 'Edit User' : 'Create New User & Health Card'}
+                        </h2>
                         <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>
-                            Fill in user details. Default password: <code>user123</code>
+                            {isEditMode ? 'Update user details' : 'Fill in user details. Default password: '}<code>{isEditMode ? '' : 'user123'}</code>
                         </p>
                     </div>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
@@ -290,7 +316,7 @@ export default function EnhancedUserForm({ onClose, onSuccess }: EnhancedUserFor
                                 />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Father's Name</label>
+                                <label className="form-label">Father's Name/Guardian Name</label>
                                 <input
                                     type="text"
                                     className="form-input"
@@ -299,24 +325,34 @@ export default function EnhancedUserForm({ onClose, onSuccess }: EnhancedUserFor
                                 />
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Guardian Name</label>
-                                <input
-                                    type="text"
-                                    className="form-input"
-                                    value={formData.guardian_name}
-                                    onChange={(e) => setFormData({ ...formData, guardian_name: e.target.value })}
-                                />
-                            </div>
-                            <div className="form-group">
                                 <label className="form-label">CNIC *</label>
                                 <input
                                     type="text"
                                     required
                                     className="form-input"
-                                    placeholder="XXXXX-XXXXXXX-X"
+                                    placeholder="42101-3003303-2"
+                                    pattern="^\d{5}-\d{7}-\d{1}$"
+                                    title="CNIC must be in format: XXXXX-XXXXXXX-X (e.g., 42101-3003303-2)"
                                     value={formData.cnic}
-                                    onChange={(e) => setFormData({ ...formData, cnic: e.target.value })}
+                                    onChange={(e) => {
+                                        // Auto-format CNIC with dashes
+                                        let value = e.target.value.replace(/[^0-9]/g, '');
+                                        if (value.length > 5) {
+                                            value = value.slice(0, 5) + '-' + value.slice(5);
+                                        }
+                                        if (value.length > 13) {
+                                            value = value.slice(0, 13) + '-' + value.slice(13);
+                                        }
+                                        if (value.length > 15) {
+                                            value = value.slice(0, 15);
+                                        }
+                                        setFormData({ ...formData, cnic: value });
+                                    }}
+                                    maxLength={15}
                                 />
+                                <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                                    Format: XXXXX-XXXXXXX-X (e.g., 42101-3003303-2)
+                                </p>
                             </div>
                             <div className="form-group">
                                 <label className="form-label">Date of Birth</label>
@@ -368,17 +404,23 @@ export default function EnhancedUserForm({ onClose, onSuccess }: EnhancedUserFor
                         </h3>
                         <div className="grid grid-cols-2">
                             <div className="form-group">
-                                <label className="form-label">Email *</label>
+                                <label className="form-label">Email * (Gmail only)</label>
                                 <input
                                     type="email"
                                     required
                                     className="form-input"
+                                    placeholder="example@gmail.com"
+                                    pattern="^[a-zA-Z0-9._%+-]+@gmail\.com$"
+                                    title="Only Gmail addresses are accepted (e.g., example@gmail.com)"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 />
+                                <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                                    Only @gmail.com addresses are accepted
+                                </p>
                             </div>
                             <div className="form-group">
-                                <label className="form-label">Phone Number *</label>
+                                <label className="form-label">WhatsApp Number/Phone Number *</label>
                                 <input
                                     type="tel"
                                     required
@@ -386,16 +428,6 @@ export default function EnhancedUserForm({ onClose, onSuccess }: EnhancedUserFor
                                     placeholder="03XX-XXXXXXX"
                                     value={formData.phone}
                                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label className="form-label">WhatsApp Number</label>
-                                <input
-                                    type="tel"
-                                    className="form-input"
-                                    placeholder="03XX-XXXXXXX"
-                                    value={formData.whatsapp_number}
-                                    onChange={(e) => setFormData({ ...formData, whatsapp_number: e.target.value })}
                                 />
                             </div>
                             <div className="form-group">
@@ -638,7 +670,9 @@ export default function EnhancedUserForm({ onClose, onSuccess }: EnhancedUserFor
                             className="btn btn-success"
                             disabled={loading}
                         >
-                            {loading ? 'Creating...' : 'Create User & Generate Card'}
+                            {loading
+                                ? (isEditMode ? 'Updating...' : 'Creating...')
+                                : (isEditMode ? 'Update User' : 'Create User & Generate Card')}
                         </button>
                     </div>
                 </form>
