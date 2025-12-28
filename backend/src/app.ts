@@ -46,6 +46,9 @@ app.use(cors({
         'https://new1.afnandevs.com',
         'https://new2.afnandevs.com',
         'https://new3.afnandevs.com',
+        'https://panel.shifasahulatcard.com',
+        'https://labs.shifasahulatcard.com',
+        'https://clients.shifasahulatcard.com',
         'http://localhost:3001',
         'http://localhost:3002',
         'http://localhost:3003'
