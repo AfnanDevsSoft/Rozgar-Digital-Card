@@ -115,7 +115,7 @@ router.post('/', authMiddleware, requireSuperAdmin, async (req: AuthRequest, res
                 email: data.email,
                 password_hash: passwordHash,
                 role: data.role,
-                lab_id: data.lab_id,
+                lab_id: data.role === 'SUPER_ADMIN' ? null : (data.lab_id || null),
                 must_change_password: !data.password // If no password provided, force change
             },
             include: { lab: true }
