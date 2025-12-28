@@ -8,10 +8,10 @@
 import { useEffect, useState } from 'react';
 import { User, Mail, Phone, MapPin, Calendar, Heart, Users, DollarSign, FileText, CreditCard } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { getFileUrl } from '@/lib/api';
+import { getFileUrl, User as UserType } from '@/lib/api';
 
 export default function ProfilePage() {
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<UserType | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {

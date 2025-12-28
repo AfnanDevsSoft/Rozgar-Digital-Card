@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import Cookies from 'js-cookie';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://shifabackend.afnandevs.com/api';
 
 const api: AxiosInstance = axios.create({
     baseURL: API_URL,
@@ -46,6 +46,35 @@ export interface HealthCard {
     status: string;
     issue_date: string;
     expiry_date: string;
+}
+
+export interface User {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    father_name?: string;
+    guardian_name?: string;
+    cnic?: string;
+    dob?: string;
+    gender?: string;
+    blood_group?: string;
+    address?: string;
+    town?: string;
+    whatsapp_number?: string;
+    alternative_number?: string;
+    eligibility_type?: string;
+    disability_type?: string;
+    disability_other_comment?: string;
+    has_disability_certificate?: boolean;
+    monthly_income?: string | number;
+    family_members_count?: string | number;
+    current_health_condition?: string;
+    cnic_front_photo?: string;
+    cnic_back_photo?: string;
+    disability_certificate_photo?: string;
+    passport_photo?: string;
+    health_card: HealthCard | null;
 }
 
 export interface Transaction {
