@@ -24,7 +24,6 @@ import adminRoutes from './routes/admin.routes.js';
 import labStaffRoutes from './routes/labStaff.routes.js';
 import testCatalogRoutes from './routes/testCatalog.routes.js';
 import uploadRoutes from './routes/upload.routes.js';
-import townRoutes from './routes/town.routes.js';
 
 // Initialize Express app
 const app: Express = express();
@@ -93,7 +92,6 @@ app.use('/api/admins', adminRoutes);
 app.use('/api/lab-staff', labStaffRoutes);
 app.use('/api/test-catalog', testCatalogRoutes);
 app.use('/api/upload', uploadRoutes);
-app.use('/api/towns', townRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

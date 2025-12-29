@@ -118,13 +118,19 @@ docker-compose logs -f
 - Action buttons: Blue (primary), Green (success), Red (danger)
 - Font: Inter
 
-## 📋 Serial Number Format
-- Format: `SSC-YYMM-TTTT-NNNN`
-- **SSC**: Prefix
-- **YYMM**: Year + Month (e.g., 2512 = December 2025)
-- **TTTT**: Town code (4 digits, zero-padded)
-- **NNNN**: Sequential number (4 digits, zero-padded)
-- Example: `SSC-2512-0001-0001`
+### Card Number Format
+
+The health cards use a structured serial number format:
+
+```
+SSC-YYMM-NNNNN
+```
+
+- **SSC**: Static prefix (Shifa Sahulat Card)
+- **YYMM**: Year (2 digits) + Month (2 digits), e.g., 2512 = December 2025
+- **NNNNN**: Sequential number (5 digits, zero-padded)
+
+Example: `SSC-2512-00001` = First card issued in December 2025
 
 ## 🧾 Receipt Format
 - Format: `INV-YYYY-NNNNN` (e.g., INV-2025-00001)

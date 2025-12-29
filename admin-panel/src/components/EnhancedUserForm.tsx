@@ -34,8 +34,6 @@ interface FormData {
 
     // Address
     address: string;
-    town: string;
-    town_code: string;  // Town code for card serial number
 
     // Eligibility & Disability
     eligibility_type: string;
@@ -55,7 +53,6 @@ interface FormData {
 export default function EnhancedUserForm({ onClose, onSuccess, user }: EnhancedUserFormProps) {
     const isEditMode = !!user;
     const [loading, setLoading] = useState(false);
-    const [towns, setTowns] = useState<Array<{ id: string, name: string, code: string }>>([]);
     const [formData, setFormData] = useState<FormData>({
         name: user?.name || '',
         father_name: user?.father_name || '',
@@ -67,8 +64,6 @@ export default function EnhancedUserForm({ onClose, onSuccess, user }: EnhancedU
         gender: user?.gender || '',
         blood_group: user?.blood_group || '',
         address: user?.address || '',
-        town: user?.town || '',
-        town_code: user?.town_code || '1',
         eligibility_type: user?.eligibility_type || '',
         disability_type: user?.disability_type || '',
         disability_other_comment: user?.disability_other_comment || '',
@@ -84,27 +79,6 @@ export default function EnhancedUserForm({ onClose, onSuccess, user }: EnhancedU
                 return date.toISOString().split('T')[0];
             })(),
     });
-
-    // Load towns on mount
-    useEffect(() => {
-        loadTowns();
-    }, []);
-
-    const loadTowns = async () => {
-        try {
-            const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/towns?active=true`, {
-                headers: {
-                    'Authorization': `Bearer ${Cookies.get('admin_token')}`,
-                },
-            });
-            if (response.ok) {
-                const data = await response.json();
-                setTowns(data);
-            }
-        } catch (error) {
-            console.error('Failed to load towns:', error);
-        }
-    };
 
     // File uploads
     const [files, setFiles] = useState({
@@ -404,20 +378,14 @@ export default function EnhancedUserForm({ onClose, onSuccess, user }: EnhancedU
                         </h3>
                         <div className="grid grid-cols-2">
                             <div className="form-group">
-                                <label className="form-label">Email * (Gmail only)</label>
+                                <label className="form-label">Email (Optional)</label>
                                 <input
                                     type="email"
-                                    required
                                     className="form-input"
-                                    placeholder="example@gmail.com"
-                                    pattern="^[a-zA-Z0-9._%+-]+@gmail\.com$"
-                                    title="Only Gmail addresses are accepted (e.g., example@gmail.com)"
+                                    placeholder="email@example.com"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                                 />
-                                <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                                    Only @gmail.com addresses are accepted
-                                </p>
                             </div>
                             <div className="form-group">
                                 <label className="form-label">WhatsApp Number/Phone Number *</label>
@@ -449,32 +417,6 @@ export default function EnhancedUserForm({ onClose, onSuccess, user }: EnhancedU
                                 value={formData.address}
                                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                             />
-                        </div>
-                        <div className="form-group">
-                            <label className="form-label">Town *</label>
-                            <select
-                                className="form-select"
-                                value={formData.town_code}
-                                onChange={(e) => {
-                                    const selectedTown = towns.find(t => t.code === e.target.value);
-                                    setFormData({
-                                        ...formData,
-                                        town_code: e.target.value,
-                                        town: selectedTown?.name || ''
-                                    });
-                                }}
-                                required
-                            >
-                                <option value="">Select Town</option>
-                                {towns.map(town => (
-                                    <option key={town.id} value={town.code}>
-                                        {town.name} ({town.code})
-                                    </option>
-                                ))}
-                            </select>
-                            <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                                This will be used for card serial number generation
-                            </p>
                         </div>
                     </div>
 

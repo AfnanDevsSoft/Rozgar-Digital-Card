@@ -18,14 +18,12 @@ const createUserSchema = z.object({
     name: z.string().min(2),
     father_name: z.string().optional(),
     guardian_name: z.string().optional(),
-    email: z.string().email(),
+    email: z.string().email().optional(),
     phone: z.string().min(10),
     whatsapp_number: z.string().optional(),
     alternative_number: z.string().optional(),
     cnic: z.string().min(13),
     address: z.string().optional(),
-    town: z.string().optional(),
-    town_code: z.string().regex(/^\d{1,4}$/, 'Town code must be  1-4 digits').default('1'), // Town code for card number
     dob: z.string().optional(),
     gender: z.string().optional(),
     blood_group: z.string().optional(),
@@ -165,7 +163,7 @@ router.post('/', authMiddleware, requireAdmin, async (req: AuthRequest, res: Res
         const passwordHash = await bcrypt.hash(tempPassword, 12);
 
         // Generate serial number with town code
-        const serialNumber = await generateSerialNumber(data.town_code || '1');
+        const serialNumber = await generateSerialNumber();
 
         // Create user and card in transaction
         const user = await prisma.user.create({
@@ -173,13 +171,12 @@ router.post('/', authMiddleware, requireAdmin, async (req: AuthRequest, res: Res
                 name: data.name,
                 father_name: data.father_name,
                 guardian_name: data.guardian_name,
-                email: data.email,
+                email: data.email || '',
                 phone: data.phone,
                 whatsapp_number: data.whatsapp_number,
                 alternative_number: data.alternative_number,
                 cnic: data.cnic,
                 address: data.address,
-                town: data.town,
                 dob: data.dob ? new Date(data.dob) : null,
                 gender: data.gender,
                 blood_group: data.blood_group,

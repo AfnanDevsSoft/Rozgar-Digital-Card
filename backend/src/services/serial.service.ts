@@ -1,16 +1,15 @@
 /**
  * Serial Number Generation Service
- * Format: SSC-YYMM-TTTT-NNNN
+ * Format: SSC-YYMM-NNNNN
  * - SSC: Static prefix
  * - YYMM: Year (2 digits) + Month (2 digits)
- * - TTTT: Town code (4 digits, zero-padded)
- * - NNNN: Sequential number (4 digits, zero-padded)
- * Example: SSC-2512-0001-0001
+ * - NNNNN: Sequential number (5 digits, zero-padded)
+ * Example: SSC-2512-00001
  */
 
 import { prisma } from '../lib/prisma.js';
 
-export const generateSerialNumber = async (townCode: string): Promise<string> => {
+export const generateSerialNumber = async (): Promise<string> => {
     const now = new Date();
     const year = now.getFullYear(); // Full year (e.g., 2025)
     const month = now.getMonth() + 1; // Month (1-12)
@@ -20,16 +19,13 @@ export const generateSerialNumber = async (townCode: string): Promise<string> =>
     const monthStr = month.toString().padStart(2, '0'); // Zero-pad month
     const yearMonth = `${yearStr}${monthStr}`; // e.g., "2512"
 
-    // Ensure town code is 4 digits
-    const formattedTownCode = townCode.padStart(4, '0');
-
-    // Get or create counter for this year/month/town combination
+    // Get or create counter for this year/month combination
     const counter = await prisma.cardCounter.upsert({
         where: {
             year_month_town_code: {
                 year,
                 month,
-                town_code: formattedTownCode
+                town_code: '0000' // Default town code (not used but required for unique constraint)
             }
         },
         update: {
@@ -38,16 +34,16 @@ export const generateSerialNumber = async (townCode: string): Promise<string> =>
         create: {
             year,
             month,
-            town_code: formattedTownCode,
+            town_code: '0000',
             count: 1
         }
     });
 
-    // Format sequence number (4 digits, zero-padded)
-    const sequence = counter.count.toString().padStart(4, '0');
+    // Format sequence number (5 digits, zero-padded)
+    const sequence = counter.count.toString().padStart(5, '0');
 
-    // Construct final serial number: SSC-YYMM-TTTT-NNNN
-    return `SSC-${yearMonth}-${formattedTownCode}-${sequence}`;
+    // Construct final serial number: SSC-YYMM-NNNNN
+    return `SSC-${yearMonth}-${sequence}`;
 };
 
 /**
