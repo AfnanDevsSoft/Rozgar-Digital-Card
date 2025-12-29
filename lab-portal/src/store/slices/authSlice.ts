@@ -14,6 +14,7 @@ interface User {
     role: 'BRANCH_ADMIN' | 'RECEPTIONIST';
     lab_id: string;
     lab: Lab;
+    must_change_password?: boolean;
 }
 
 interface AuthState {

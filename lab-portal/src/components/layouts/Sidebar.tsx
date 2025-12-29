@@ -13,15 +13,17 @@ import {
     Microscope,
     ChevronLeft,
     ChevronRight,
+    Users,
 } from 'lucide-react';
 
 const navItems = [
-    { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={20} /> },
-    { name: 'Verify Card', href: '/dashboard/verify', icon: <Search size={20} /> },
-    { name: 'Billing', href: '/dashboard/billing', icon: <Receipt size={20} /> },
-    { name: 'Test Catalog', href: '/dashboard/tests', icon: <Microscope size={20} />, adminOnly: true },
-    { name: 'Upload Reports', href: '/dashboard/reports', icon: <Upload size={20} /> },
-    { name: 'Transactions', href: '/dashboard/transactions', icon: <FileText size={20} /> },
+    { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={20} />, allowedRoles: ['BRANCH_ADMIN'] },
+    { name: 'Verify Card', href: '/dashboard/verify', icon: <Search size={20} />, allowedRoles: ['BRANCH_ADMIN', 'RECEPTIONIST'] },
+    { name: 'Billing', href: '/dashboard/billing', icon: <Receipt size={20} />, allowedRoles: ['BRANCH_ADMIN', 'RECEPTIONIST'] },
+    { name: 'Test Catalog', href: '/dashboard/tests', icon: <Microscope size={20} />, allowedRoles: ['BRANCH_ADMIN'] },
+    { name: 'Upload Reports', href: '/dashboard/reports', icon: <Upload size={20} />, allowedRoles: ['BRANCH_ADMIN', 'RECEPTIONIST'] },
+    { name: 'Transactions', href: '/dashboard/transactions', icon: <FileText size={20} />, allowedRoles: ['BRANCH_ADMIN'] },
+    { name: 'Staff', href: '/dashboard/staff', icon: <Users size={20} />, allowedRoles: ['BRANCH_ADMIN'] },
 ];
 
 interface SidebarProps {
@@ -33,9 +35,19 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
     const pathname = usePathname();
     const user = useSelector((state: RootState) => state.auth.user);
 
+    // Filter navigation items based on user role
+    const userRole = user?.role || '';
     const filteredItems = navItems.filter(item =>
-        !item.adminOnly || user?.role === 'BRANCH_ADMIN'
+        item.allowedRoles.includes(userRole)
     );
+
+    // Debug logging
+    console.log('Sidebar Debug:', {
+        userRole,
+        totalItems: navItems.length,
+        filteredItems: filteredItems.length,
+        items: filteredItems.map(i => i.name)
+    });
 
     return (
         <aside
@@ -63,30 +75,38 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
             </div>
 
             <nav style={{ flex: 1, padding: '16px 12px', overflowY: 'auto' }}>
-                {filteredItems.map((item) => {
-                    const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '12px',
-                                padding: '12px',
-                                borderRadius: '8px',
-                                marginBottom: '4px',
-                                color: isActive ? '#ffffff' : '#9ca3af',
-                                backgroundColor: isActive ? '#2563eb' : 'transparent',
-                                textDecoration: 'none',
-                                transition: 'all 0.2s ease',
-                            }}
-                        >
-                            {item.icon}
-                            {isOpen && <span style={{ fontSize: '14px' }}>{item.name}</span>}
-                        </Link>
-                    );
-                })}
+                {filteredItems.length === 0 ? (
+                    <div style={{ padding: '20px', color: '#9ca3af', fontSize: '14px', textAlign: 'center' }}>
+                        <p>No menu items</p>
+                        <p style={{ fontSize: '12px', marginTop: '8px' }}>Role: {userRole || 'None'}</p>
+                        <p style={{ fontSize: '12px' }}>Total items: {navItems.length}</p>
+                    </div>
+                ) : (
+                    filteredItems.map((item) => {
+                        const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
+                        return (
+                            <Link
+                                key={item.href}
+                                href={item.href}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    padding: '12px',
+                                    borderRadius: '8px',
+                                    marginBottom: '4px',
+                                    color: isActive ? '#ffffff' : '#9ca3af',
+                                    backgroundColor: isActive ? '#2563eb' : 'transparent',
+                                    textDecoration: 'none',
+                                    transition: 'all 0.2s ease',
+                                }}
+                            >
+                                {item.icon}
+                                {isOpen && <span style={{ fontSize: '14px' }}>{item.name}</span>}
+                            </Link>
+                        );
+                    })
+                )}
             </nav>
 
             <button

@@ -198,6 +198,7 @@ router.post('/staff/login', async (req: Request, res: Response) => {
                 email: staff.email,
                 name: staff.name,
                 role: 'RECEPTIONIST',
+                lab_id: staff.lab_id,
                 lab: staff.lab,
                 must_change_password: staff.must_change_password
             }
@@ -237,7 +238,9 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
                 where: { id },
                 include: { lab: true }
             });
-            res.json({ user: staff, type: 'staff' });
+            // Add role to staff object
+            const staffWithRole = { ...staff, role: 'RECEPTIONIST' };
+            res.json({ user: staffWithRole, type: 'staff' });
         }
     } catch (error) {
         console.error('Get profile error:', error);

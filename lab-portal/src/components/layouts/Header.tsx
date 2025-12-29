@@ -48,7 +48,6 @@ export default function Header({ sidebarOpen }: HeaderProps) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', backgroundColor: '#f3f4f6', borderRadius: '8px' }}>
                         <Building2 size={18} color="#6b7280" />
                         <span style={{ fontSize: '14px', fontWeight: 500 }}>{user.lab.name}</span>
-                        <span className="badge badge-success">{user.lab.discount_rate}% discount</span>
                     </div>
                 )}
 

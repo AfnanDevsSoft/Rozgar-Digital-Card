@@ -7,6 +7,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useSearchParams } from 'next/navigation';
 import { RootState } from '@/store/store';
 import { setCurrentPage } from '@/store/slices/uiSlice';
 import { cardsAPI, transactionsAPI, testsAPI, Test } from '@/lib/api';
@@ -19,6 +20,7 @@ interface SelectedTest extends Test {
 
 export default function EnhancedBillingPage() {
     const dispatch = useDispatch();
+    const searchParams = useSearchParams();
     const user = useSelector((state: RootState) => state.auth.user);
     const receiptRef = useRef<HTMLDivElement>(null);
 
@@ -32,7 +34,17 @@ export default function EnhancedBillingPage() {
     useEffect(() => {
         dispatch(setCurrentPage('Billing'));
         if (user?.lab_id) fetchTests();
-    }, [dispatch, user]);
+
+        // Auto-verify card if serial number is in URL
+        const serialFromUrl = searchParams.get('serial');
+        if (serialFromUrl) {
+            setSerial(serialFromUrl);
+            // Small delay to ensure state is set before verification
+            setTimeout(() => {
+                verifyCardFromUrl(serialFromUrl);
+            }, 100);
+        }
+    }, [dispatch, user]); // Removed searchParams to prevent duplicate calls
 
     const fetchTests = async () => {
         try {
@@ -40,6 +52,21 @@ export default function EnhancedBillingPage() {
             setTests(response.data);
         } catch (error) {
             console.error('Failed to fetch tests:', error);
+        }
+    };
+
+    const verifyCardFromUrl = async (serialNumber: string) => {
+        if (!serialNumber.trim()) return;
+        setLoading(true);
+        try {
+            const response = await cardsAPI.verify(serialNumber.trim());
+            setCardInfo(response.data);
+            toast.success('Card verified! Ready for billing.');
+        } catch (error: any) {
+            console.error('Auto-verify failed:', error);
+            setCardInfo(null);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -168,7 +195,6 @@ export default function EnhancedBillingPage() {
                     <div ref={receiptRef}>
                         <div style={{ textAlign: 'center', marginBottom: '20px' }}>
                             <h2 style={{ fontSize: '24px', fontWeight: 700 }}>{user?.lab?.name}</h2>
-                            <p style={{ fontSize: '14px', color: '#6b7280' }}>Digital Health Card Partner</p>
                             <div style={{ borderTop: '2px dashed #e5e7eb', margin: '16px 0' }}></div>
                             <p style={{ fontSize: '16px', fontFamily: 'monospace' }}>Receipt: <strong>{transaction.receipt_number}</strong></p>
                             <p style={{ fontSize: '12px', color: '#6b7280' }}>{new Date().toLocaleString()}</p>
@@ -218,8 +244,49 @@ export default function EnhancedBillingPage() {
 
                 <style jsx global>{`
                     @media print {
-                        .no-print { display: none !important; }
-                        @page { size: A4; margin: 20mm; }
+                        /* Hide everything except the receipt */
+                        body * {
+                            visibility: hidden;
+                        }
+                        
+                        /* Show only the receipt card and its children */
+                        .card, .card * {
+                            visibility: visible;
+                        }
+                        
+                        /* Hide UI elements */
+                        .no-print,
+                        header,
+                        nav,
+                        aside,
+                        .sidebar,
+                        button,
+                        [role="navigation"] {
+                            display: none !important;
+                        }
+                        
+                        /* A4 page setup - hide browser headers/footers */
+                        @page {
+                            size: A4;
+                            margin: 0;
+                        }
+                        
+                        /* Add custom margins to the content instead */
+                        .card {
+                            position: absolute;
+                            left: 0;
+                            top: 0;
+                            width: 100%;
+                            padding: 20mm;
+                            box-shadow: none !important;
+                            border: none !important;
+                        }
+                        
+                        /* Remove margins from body */
+                        body {
+                            margin: 0;
+                            padding: 0;
+                        }
                     }
                 `}</style>
             </div>

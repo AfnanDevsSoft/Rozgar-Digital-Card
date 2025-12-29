@@ -19,9 +19,7 @@ import {
     Edit,
     Trash2,
     X,
-    Percent,
-    FlaskConical,
-    Save
+    FlaskConical
 } from 'lucide-react';
 
 interface Lab {
@@ -60,8 +58,6 @@ export default function LabDetailPage() {
     const [loading, setLoading] = useState(true);
     const [showTestModal, setShowTestModal] = useState(false);
     const [editingTest, setEditingTest] = useState<Test | null>(null);
-    const [editingDiscount, setEditingDiscount] = useState(false);
-    const [discountRate, setDiscountRate] = useState(0);
 
     const [testForm, setTestForm] = useState({
         name: '',
@@ -89,7 +85,6 @@ export default function LabDetailPage() {
             if (labResponse.ok) {
                 const labData = await labResponse.json();
                 setLab(labData);
-                setDiscountRate(labData.discount_rate);
             }
 
             // Fetch tests grouped by category
@@ -108,29 +103,7 @@ export default function LabDetailPage() {
         }
     };
 
-    const handleSaveDiscount = async () => {
-        try {
-            const token = Cookies.get('admin_token');
-            const response = await fetch(`${API_URL}/labs/${labId}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ discount_rate: discountRate })
-            });
 
-            if (response.ok) {
-                toast.success('Discount rate updated!');
-                setEditingDiscount(false);
-                fetchLabData();
-            } else {
-                toast.error('Failed to update discount rate');
-            }
-        } catch (error) {
-            toast.error('Failed to update discount rate');
-        }
-    };
 
     const handleCreateTest = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -282,8 +255,8 @@ export default function LabDetailPage() {
                 </span>
             </div>
 
-            {/* Lab Info & Discount Config */}
-            <div className="grid grid-cols-2" style={{ marginBottom: '24px' }}>
+            {/* Lab Info */}
+            <div style={{ marginBottom: '24px' }}>
                 {/* Lab Info Card */}
                 <div className="card">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
@@ -305,57 +278,6 @@ export default function LabDetailPage() {
                         <p style={{ marginBottom: '8px' }}>📞 <strong>Phone:</strong> {lab.phone}</p>
                         <p>📧 <strong>Email:</strong> {lab.email}</p>
                     </div>
-                </div>
-
-                {/* Discount Configuration Card */}
-                <div className="card">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                        <div style={{
-                            width: '48px',
-                            height: '48px',
-                            borderRadius: '12px',
-                            backgroundColor: '#dcfce7',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}>
-                            <Percent size={24} color="#16a34a" />
-                        </div>
-                        <h2 style={{ fontSize: '18px', fontWeight: 600 }}>Discount Configuration</h2>
-                    </div>
-
-                    {editingDiscount ? (
-                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                            <input
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={discountRate}
-                                onChange={(e) => setDiscountRate(parseFloat(e.target.value))}
-                                className="form-input"
-                                style={{ width: '100px' }}
-                            />
-                            <span>%</span>
-                            <button className="btn btn-success btn-sm" onClick={handleSaveDiscount}>
-                                <Save size={16} /> Save
-                            </button>
-                            <button className="btn btn-outline btn-sm" onClick={() => setEditingDiscount(false)}>
-                                Cancel
-                            </button>
-                        </div>
-                    ) : (
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <div>
-                                <p style={{ fontSize: '14px', color: '#6b7280' }}>Default Discount Rate</p>
-                                <p style={{ fontSize: '32px', fontWeight: 700, color: '#16a34a' }}>{lab.discount_rate}%</p>
-                            </div>
-                            {isSuperAdmin && (
-                                <button className="btn btn-outline btn-sm" onClick={() => setEditingDiscount(true)}>
-                                    <Edit size={16} /> Edit
-                                </button>
-                            )}
-                        </div>
-                    )}
                 </div>
             </div>
 

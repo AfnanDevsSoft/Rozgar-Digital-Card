@@ -140,12 +140,18 @@ router.post('/', authMiddleware, requireAdmin, async (req: AuthRequest, res: Res
         const data = createUserSchema.parse(req.body);
 
         // Check if email or CNIC already exists
+        const whereClause: any[] = [
+            { cnic: data.cnic }
+        ];
+
+        // Only check email if it's provided
+        if (data.email && data.email.trim() !== '') {
+            whereClause.push({ email: data.email });
+        }
+
         const existing = await prisma.user.findFirst({
             where: {
-                OR: [
-                    { email: data.email },
-                    { cnic: data.cnic }
-                ]
+                OR: whereClause
             }
         });
 
@@ -204,15 +210,22 @@ router.post('/', authMiddleware, requireAdmin, async (req: AuthRequest, res: Res
             include: { health_card: true }
         });
 
-        // Send welcome email with credentials
-        const portalUrl = process.env.USER_PORTAL_URL || 'http://localhost:3003';
-        await sendWelcomeEmail(
-            user.email,
-            user.name,
-            serialNumber,
-            tempPassword,
-            portalUrl
-        );
+        // Send welcome email with credentials only if email is provided
+        if (user.email && user.email.trim() !== '') {
+            const portalUrl = process.env.USER_PORTAL_URL || 'http://localhost:3003';
+            try {
+                await sendWelcomeEmail(
+                    user.email,
+                    user.name,
+                    serialNumber,
+                    tempPassword,
+                    portalUrl
+                );
+            } catch (emailError) {
+                console.error('Failed to send welcome email:', emailError);
+                // Don't fail the request if email sending fails
+            }
+        }
 
         res.status(201).json({
             user,
@@ -363,15 +376,22 @@ router.post('/:id/reset-password', authMiddleware, requireAdmin, async (req: Aut
             data: { password_hash: passwordHash }
         });
 
-        // Send email with new credentials
-        const portalUrl = process.env.USER_PORTAL_URL || 'http://localhost:3003';
-        await sendWelcomeEmail(
-            user.email,
-            user.name,
-            user.health_card?.serial_number || '',
-            newPassword,
-            portalUrl
-        );
+        // Send email with new credentials only if email is provided
+        if (user.email && user.email.trim() !== '') {
+            const portalUrl = process.env.USER_PORTAL_URL || 'http://localhost:3003';
+            try {
+                await sendWelcomeEmail(
+                    user.email,
+                    user.name,
+                    user.health_card?.serial_number || '',
+                    newPassword,
+                    portalUrl
+                );
+            } catch (emailError) {
+                console.error('Failed to send password reset email:', emailError);
+                // Don't fail the request if email sending fails
+            }
+        }
 
         res.json({
             message: 'Password reset successfully',

@@ -144,11 +144,13 @@ export default function EnhancedUserForm({ onClose, onSuccess, user }: EnhancedU
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Validate Gmail email
-        const gmailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
-        if (!gmailPattern.test(formData.email)) {
-            toast.error('Only Gmail addresses (@gmail.com) are accepted');
-            return;
+        // Validate email format if provided (optional)
+        if (formData.email && formData.email.trim() !== '') {
+            const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            if (!emailPattern.test(formData.email)) {
+                toast.error('Please enter a valid email address');
+                return;
+            }
         }
 
         // Validate CNIC format

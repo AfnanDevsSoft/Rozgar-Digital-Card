@@ -9,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import { RootState } from '@/store/store';
 import { clearAuth } from '@/store/slices/authSlice';
-import { LogOut, Bell, User } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 
 interface HeaderProps {
     sidebarOpen: boolean;
@@ -52,23 +52,6 @@ export default function Header({ sidebarOpen }: HeaderProps) {
 
             {/* Right Actions */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                {/* Notifications */}
-                <button
-                    style={{
-                        width: '40px',
-                        height: '40px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        backgroundColor: 'transparent',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        position: 'relative',
-                    }}
-                >
-                    <Bell size={20} color="#4b5563" />
-                </button>
 
                 {/* User Menu */}
                 <div

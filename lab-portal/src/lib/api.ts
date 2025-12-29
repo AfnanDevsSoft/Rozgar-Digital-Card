@@ -117,6 +117,33 @@ export const reportsAPI = {
     getStats: () => api.get('/reports/stats/overview'),
 };
 
+export interface LabStaff {
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+    is_active: boolean;
+    must_change_password: boolean;
+    created_at: string;
+    lab?: {
+        id: string;
+        name: string;
+        lab_code: string;
+    };
+}
+
+export const labStaffAPI = {
+    getAll: () => api.get('/lab-staff'),
+    getByLab: (labId: string) => api.get(`/lab-staff/lab/${labId}`),
+    create: (data: { name: string; email: string; lab_id: string }) =>
+        api.post('/lab-staff', data),
+    update: (id: string, data: { name?: string; email?: string }) =>
+        api.put(`/lab-staff/${id}`, data),
+    toggleStatus: (id: string) => api.patch(`/lab-staff/${id}/toggle-status`),
+    resetPassword: (id: string, new_password: string) =>
+        api.post(`/lab-staff/${id}/reset-password`, { new_password }),
+};
+
 export const discountAPI = {
     calculate: (amount: number, lab_id?: string) =>
         api.post('/discount/calculate', { amount, lab_id }),

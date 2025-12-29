@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useRouter } from 'next/navigation';
 import { RootState } from '@/store/store';
 import { setCurrentPage } from '@/store/slices/uiSlice';
 import { transactionsAPI, reportsAPI } from '@/lib/api';
@@ -24,14 +25,22 @@ interface Stats {
 
 export default function DashboardPage() {
     const dispatch = useDispatch();
+    const router = useRouter();
     const user = useSelector((state: RootState) => state.auth.user);
     const [stats, setStats] = useState<Stats | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         dispatch(setCurrentPage('Dashboard'));
+
+        // Redirect receptionists to verify page (they don't have dashboard access)
+        if (user?.role === 'RECEPTIONIST') {
+            router.push('/dashboard/verify');
+            return;
+        }
+
         fetchStats();
-    }, [dispatch]);
+    }, [dispatch, user, router]);
 
     const fetchStats = async () => {
         try {

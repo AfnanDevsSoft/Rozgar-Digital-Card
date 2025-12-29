@@ -7,6 +7,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 import { Lock, Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -63,7 +64,9 @@ export default function PasswordChangeScreen({ userType, apiUrl, redirectPath }:
         setLoading(true);
 
         try {
-            const token = localStorage.getItem('token');
+            // Get token from cookies (lab portal uses 'lab_token', user portal uses 'user_token')
+            const token = userType === 'staff' ? Cookies.get('lab_token') : Cookies.get('user_token');
+
             const response = await fetch(`${apiUrl}/auth/change-password`, {
                 method: 'POST',
                 headers: {
@@ -83,11 +86,8 @@ export default function PasswordChangeScreen({ userType, apiUrl, redirectPath }:
 
             toast.success('Password changed successfully!');
 
-            // Small delay for user to see success message
-            setTimeout(() => {
-                router.push(redirectPath);
-                router.refresh();
-            }, 1000);
+            // Redirect immediately after success (no need for delay)
+            window.location.href = redirectPath; // Use window.location for full page reload to reset auth state
         } catch (error: any) {
             toast.error(error.message || 'Failed to change password');
         } finally {

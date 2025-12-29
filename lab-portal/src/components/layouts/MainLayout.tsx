@@ -14,7 +14,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     const router = useRouter();
     const dispatch = useDispatch();
     const { isAuthenticated, isLoading } = useSelector((state: RootState) => state.auth);
-    const [sidebarOpen, setSidebarOpen] = useState(true);
+    const [sidebarOpen, setSidebarOpen] = useState(true); // Always start open
 
     useEffect(() => {
         const checkAuth = async () => {
