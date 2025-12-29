@@ -138,19 +138,19 @@ export default function CardsPage() {
             background-image: url('${backImageUrl}');
         }
         
-        /* Data overlay positioning for BACK card */
+        /* Data overlay positioning for FRONT card */
         .data-overlay {
             position: absolute;
             width: 100%;
             height: 100%;
         }
         
-        /* Adjust these positions based on your horizontal card design */
+        /* Field positions using percentage for better alignment */
         .sr-number {
             position: absolute;
-            top: 85mm;
-            left: 95mm;
-            font-size: 18pt;
+            top: 43%;
+            left: 11%;
+            font-size: 13pt;
             font-weight: 700;
             color: #000;
             font-family: 'Inter', Arial, sans-serif;
@@ -158,9 +158,9 @@ export default function CardsPage() {
         
         .name {
             position: absolute;
-            top: 100mm;
-            left: 95mm;
-            font-size: 18pt;
+            top: 52%;
+            left: 14.5%;
+            font-size: 13pt;
             font-weight: 700;
             color: #000;
             text-transform: uppercase;
@@ -169,9 +169,19 @@ export default function CardsPage() {
         
         .cnic {
             position: absolute;
-            top: 115mm;
-            left: 95mm;
-            font-size: 18pt;
+            top: 60%;
+            left: 11%;
+            font-size: 13pt;
+            font-weight: 700;
+            color: #000;
+            font-family: 'Inter', Arial, sans-serif;
+        }
+        
+        .contact {
+            position: absolute;
+            top: 68%;
+            left: 20.5%;
+            font-size: 13pt;
             font-weight: 700;
             color: #000;
             font-family: 'Inter', Arial, sans-serif;
@@ -179,12 +189,11 @@ export default function CardsPage() {
         
         .valid-thru {
             position: absolute;
-            top: 140mm;
-            left: 95mm;
-            font-size: 16pt;
+            top: 70%;
+            right: 7.5%;
+            font-size: 14pt;
             font-weight: 700;
             color: #000;
-            text-transform: uppercase;
             font-family: 'Inter', Arial, sans-serif;
         }
         
@@ -233,18 +242,19 @@ export default function CardsPage() {
 <body>
     <div style="width: 100%;">
         <div class="card-container">
-            <!-- FRONT CARD (Background Image Only) -->
-            <div class="card card-front"></div>
-            
-            <!-- BACK CARD (Background Image + Data Overlay) -->
-            <div class="card card-back">
+            <!-- FRONT CARD (Background Image + Data Overlay) -->
+            <div class="card card-front">
                 <div class="data-overlay">
                     <div class="sr-number">${card.serial_number}</div>
                     <div class="name">${card.user.name.toUpperCase()}</div>
                     <div class="cnic">${card.user.cnic || '_____-_______-_'}</div>
+                    <div class="contact">${card.user.phone}</div>
                     <div class="valid-thru">${new Date(card.expiry_date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}</div>
                 </div>
             </div>
+            
+            <!-- BACK CARD (Background Image Only) -->
+            <div class="card card-back"></div>
         </div>
         
         <div class="button-container">

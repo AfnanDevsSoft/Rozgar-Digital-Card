@@ -125,7 +125,8 @@ router.get('/', authMiddleware, requireAdmin, async (req: AuthRequest, res: Resp
                             id: true,
                             name: true,
                             email: true,
-                            phone: true
+                            phone: true,
+                            cnic: true
                         }
                     }
                 },
