@@ -10,10 +10,12 @@ import { setCurrentPage } from '@/store/slices/uiSlice';
 import { RootState } from '@/store/store';
 import { labsAPI, Lab } from '@/lib/api';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 import { Plus, Search, Eye, Edit, X, Building2 } from 'lucide-react';
 
 export default function LabsPage() {
     const dispatch = useDispatch();
+    const router = useRouter();
     const user = useSelector((state: RootState) => state.auth.user);
     const [labs, setLabs] = useState<Lab[]>([]);
     const [loading, setLoading] = useState(true);
@@ -145,19 +147,27 @@ export default function LabsPage() {
                                     <p style={{ fontSize: '12px', color: '#6b7280' }}>Discount Rate</p>
                                     <p style={{ fontSize: '18px', fontWeight: 600, color: '#16a34a' }}>{lab.discount_rate}%</p>
                                 </div>
-                                {isSuperAdmin && (
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        {lab.status === 'ACTIVE' ? (
-                                            <button className="btn btn-danger btn-sm" onClick={() => handleStatusChange(lab, 'SUSPENDED')}>
-                                                Suspend
-                                            </button>
-                                        ) : (
-                                            <button className="btn btn-success btn-sm" onClick={() => handleStatusChange(lab, 'ACTIVE')}>
-                                                Activate
-                                            </button>
-                                        )}
-                                    </div>
-                                )}
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <button
+                                        className="btn btn-primary btn-sm"
+                                        onClick={() => router.push(`/dashboard/labs/${lab.id}`)}
+                                    >
+                                        <Eye size={14} /> View
+                                    </button>
+                                    {isSuperAdmin && (
+                                        <>
+                                            {lab.status === 'ACTIVE' ? (
+                                                <button className="btn btn-danger btn-sm" onClick={() => handleStatusChange(lab, 'SUSPENDED')}>
+                                                    Suspend
+                                                </button>
+                                            ) : (
+                                                <button className="btn btn-success btn-sm" onClick={() => handleStatusChange(lab, 'ACTIVE')}>
+                                                    Activate
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     ))
