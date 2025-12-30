@@ -133,15 +133,17 @@ router.post('/', authMiddleware, requireLabAccess, upload.any(), async (req: Aut
             }
         });
 
-        // Send email notification to user
-        const portalUrl = process.env.USER_PORTAL_URL || 'http://localhost:3003';
-        await sendReportNotification(
-            transaction.user.email,
-            transaction.user.name,
-            transaction.lab.name,
-            transaction.test_name,
-            portalUrl
-        );
+        // Send email notification to user (only if they have an email)
+        if (transaction.user.email) {
+            const portalUrl = process.env.USER_PORTAL_URL || 'http://localhost:3003';
+            await sendReportNotification(
+                transaction.user.email,
+                transaction.user.name,
+                transaction.lab.name,
+                transaction.test_name,
+                portalUrl
+            );
+        }
 
         res.status(201).json({
             message: `${files.length} report(s) uploaded successfully`,
