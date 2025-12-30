@@ -121,8 +121,8 @@ export default function CardsPage() {
         }
         
         .card {
-            width: 300mm;
-            height: 200mm;
+            width: 294.5mm;
+            height: 180mm;
             position: relative;
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
             background-size: cover;
@@ -148,9 +148,9 @@ export default function CardsPage() {
         /* Field positions using percentage for better alignment */
         .sr-number {
             position: absolute;
-            top: 43%;
-            left: 11%;
-            font-size: 13pt;
+            top: 42%;
+            left: 13%;
+            font-size: 17pt;
             font-weight: 700;
             color: #000;
             font-family: 'Inter', Arial, sans-serif;
@@ -158,9 +158,9 @@ export default function CardsPage() {
         
         .name {
             position: absolute;
-            top: 52%;
-            left: 14.5%;
-            font-size: 13pt;
+            top: 51%;
+            left: 15.5%;
+            font-size: 17pt;
             font-weight: 700;
             color: #000;
             text-transform: uppercase;
@@ -170,8 +170,8 @@ export default function CardsPage() {
         .cnic {
             position: absolute;
             top: 60%;
-            left: 11%;
-            font-size: 13pt;
+            left: 13%;
+            font-size: 17pt;
             font-weight: 700;
             color: #000;
             font-family: 'Inter', Arial, sans-serif;
@@ -181,7 +181,7 @@ export default function CardsPage() {
             position: absolute;
             top: 68%;
             left: 20.5%;
-            font-size: 13pt;
+            font-size: 17pt;
             font-weight: 700;
             color: #000;
             font-family: 'Inter', Arial, sans-serif;
@@ -191,7 +191,7 @@ export default function CardsPage() {
             position: absolute;
             top: 70%;
             right: 7.5%;
-            font-size: 14pt;
+            font-size: 17pt;
             font-weight: 700;
             color: #000;
             font-family: 'Inter', Arial, sans-serif;
