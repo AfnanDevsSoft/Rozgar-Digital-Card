@@ -261,12 +261,11 @@ model CardCounter {
   id         String   @id @default(uuid())
   year       Int
   month      Int
-  town_code  String
   count      Int      @default(0)
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  @@unique([year, month, town_code])
+  @@unique([year, month])
   @@map("card_counters")
 }
 

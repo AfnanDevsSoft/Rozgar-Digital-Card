@@ -19,23 +19,40 @@ export const generateSerialNumber = async (): Promise<string> => {
     const monthStr = month.toString().padStart(2, '0'); // Zero-pad month
     const yearMonth = `${yearStr}${monthStr}`; // e.g., "2512"
 
-    // Get or create counter for this year/month combination
-    const counter = await prisma.cardCounter.upsert({
-        where: {
-            year_month_town_code: {
-                year,
-                month,
-                town_code: '0000' // Default town code (not used but required for unique constraint)
+    // Get or create counter for this year/month combination using transaction
+    const counter = await prisma.$transaction(async (tx) => {
+        // Try to get existing counter
+        let existingCounter = await tx.cardCounter.findUnique({
+            where: {
+                year_month: {
+                    year,
+                    month
+                }
             }
-        },
-        update: {
-            count: { increment: 1 }
-        },
-        create: {
-            year,
-            month,
-            town_code: '0000',
-            count: 1
+        });
+
+        if (existingCounter) {
+            // Increment existing counter
+            return await tx.cardCounter.update({
+                where: {
+                    year_month: {
+                        year,
+                        month
+                    }
+                },
+                data: {
+                    count: { increment: 1 }
+                }
+            });
+        } else {
+            // Create new counter starting at 1
+            return await tx.cardCounter.create({
+                data: {
+                    year,
+                    month,
+                    count: 1
+                }
+            });
         }
     });
 
