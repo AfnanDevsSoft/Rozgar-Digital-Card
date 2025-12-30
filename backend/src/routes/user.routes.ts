@@ -177,7 +177,7 @@ router.post('/', authMiddleware, requireAdmin, async (req: AuthRequest, res: Res
                 name: data.name,
                 father_name: data.father_name,
                 guardian_name: data.guardian_name,
-                email: data.email || '',
+                email: data.email ?? null,
                 phone: data.phone,
                 whatsapp_number: data.whatsapp_number,
                 alternative_number: data.alternative_number,

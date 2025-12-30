@@ -117,7 +117,7 @@ router.post('/user/login', async (req: Request, res: Response) => {
 
         const token = generateToken({
             id: card.user.id,
-            email: card.user.email,
+            email: card.user.email || '',
             role: 'USER',
             type: 'user'
         });
@@ -127,7 +127,7 @@ router.post('/user/login', async (req: Request, res: Response) => {
             must_change_password: card.user.must_change_password,
             user: {
                 id: card.user.id,
-                email: card.user.email,
+                email: card.user.email ?? undefined,
                 name: card.user.name,
                 phone: card.user.phone,
                 must_change_password: card.user.must_change_password,

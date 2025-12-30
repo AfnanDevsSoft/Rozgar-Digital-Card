@@ -73,7 +73,7 @@ model User {
   name                       String
   father_name                String?
   guardian_name              String?
-  email                      String           @unique
+  email                      String?          @unique
   phone                      String
   whatsapp_number            String?
   alternative_number         String?
