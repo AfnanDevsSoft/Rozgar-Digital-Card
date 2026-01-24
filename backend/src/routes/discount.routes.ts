@@ -5,7 +5,7 @@
 import { Router, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.middleware.js';
-import { requireSuperAdmin } from '../middleware/rbac.middleware.js';
+import { requireSuperAdminOrAdmin } from '../middleware/rbac.middleware.js';
 import { calculateDiscount, updateDiscountSettings } from '../services/discount.service.js';
 
 const router = Router();
@@ -41,7 +41,7 @@ router.get('/settings', authMiddleware, async (_req: AuthRequest, res: Response)
  * Update discount settings
  * PUT /api/discount/settings
  */
-router.put('/settings', authMiddleware, requireSuperAdmin, async (req: AuthRequest, res: Response) => {
+router.put('/settings', authMiddleware, requireSuperAdminOrAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const { default_discount_rate, apply_to_expired } = req.body;
 

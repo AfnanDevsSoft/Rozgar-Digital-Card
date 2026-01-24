@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from './auth.middleware.js';
 
-type Role = 'SUPER_ADMIN' | 'BRANCH_ADMIN' | 'RECEPTIONIST' | 'USER';
+type Role = 'SUPER_ADMIN' | 'ADMIN' | 'BRANCH_ADMIN' | 'RECEPTIONIST' | 'USER';
 
 export const requireRoles = (...allowedRoles: Role[]) => {
     return (req: AuthRequest, res: Response, next: NextFunction): void => {
@@ -21,8 +21,9 @@ export const requireRoles = (...allowedRoles: Role[]) => {
 
 // Specific role middlewares for convenience
 export const requireSuperAdmin = requireRoles('SUPER_ADMIN');
-export const requireAdmin = requireRoles('SUPER_ADMIN', 'BRANCH_ADMIN');
-export const requireLabAccess = requireRoles('SUPER_ADMIN', 'BRANCH_ADMIN', 'RECEPTIONIST');
+export const requireSuperAdminOrAdmin = requireRoles('SUPER_ADMIN', 'ADMIN');
+export const requireAdmin = requireRoles('SUPER_ADMIN', 'ADMIN', 'BRANCH_ADMIN');
+export const requireLabAccess = requireRoles('SUPER_ADMIN', 'ADMIN', 'BRANCH_ADMIN', 'RECEPTIONIST');
 export const requireUser = requireRoles('USER');
 
 // Check if user has access to a specific lab
@@ -36,8 +37,8 @@ export const requireLabOwnership = (
         return;
     }
 
-    // Super admins can access all labs
-    if (req.user.role === 'SUPER_ADMIN') {
+    // Super admins and admins can access all labs
+    if (req.user.role === 'SUPER_ADMIN' || req.user.role === 'ADMIN') {
         next();
         return;
     }

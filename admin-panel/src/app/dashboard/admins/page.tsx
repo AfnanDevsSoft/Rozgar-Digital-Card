@@ -20,7 +20,7 @@ export default function AdminsPage() {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
-        role: 'BRANCH_ADMIN' as 'SUPER_ADMIN' | 'BRANCH_ADMIN',
+        role: 'ADMIN' as 'SUPER_ADMIN' | 'ADMIN' | 'BRANCH_ADMIN',
         lab_id: '',
     });
 
@@ -50,7 +50,7 @@ export default function AdminsPage() {
             await adminsAPI.create(formData);
             toast.success('Admin created successfully!');
             setShowModal(false);
-            setFormData({ name: '', email: '', role: 'BRANCH_ADMIN', lab_id: '' });
+            setFormData({ name: '', email: '', role: 'ADMIN', lab_id: '' });
             fetchData();
         } catch (error: any) {
             toast.error(error.response?.data?.error || 'Failed to create admin');
@@ -72,7 +72,7 @@ export default function AdminsPage() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                 <div>
                     <h1 style={{ fontSize: '24px', fontWeight: 700 }}>Admins Management</h1>
-                    <p style={{ color: '#6b7280', marginTop: '4px' }}>Manage Super Admins and Branch Admins</p>
+                    <p style={{ color: '#6b7280', marginTop: '4px' }}>Manage Super Admins, Admins and Branch Admins</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => setShowModal(true)}>
                     <Plus size={18} />
@@ -97,13 +97,15 @@ export default function AdminsPage() {
                                         width: '48px',
                                         height: '48px',
                                         borderRadius: '50%',
-                                        backgroundColor: admin.role === 'SUPER_ADMIN' ? '#0a0a0a' : '#f3f4f6',
+                                        backgroundColor: admin.role === 'SUPER_ADMIN' ? '#0a0a0a' : admin.role === 'ADMIN' ? '#2563eb' : '#f3f4f6',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                     }}>
                                         {admin.role === 'SUPER_ADMIN' ? (
                                             <Shield size={24} color="#fff" />
+                                        ) : admin.role === 'ADMIN' ? (
+                                            <UserCog size={24} color="#fff" />
                                         ) : (
                                             <UserCog size={24} color="#6b7280" />
                                         )}
@@ -119,7 +121,7 @@ export default function AdminsPage() {
                             </div>
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                                <span className={`badge ${admin.role === 'SUPER_ADMIN' ? 'badge-info' : 'badge-neutral'}`}>
+                                <span className={`badge ${admin.role === 'SUPER_ADMIN' ? 'badge-info' : admin.role === 'ADMIN' ? 'badge-success' : 'badge-neutral'}`}>
                                     {admin.role.replace('_', ' ')}
                                 </span>
                                 {admin.lab && (
@@ -180,6 +182,7 @@ export default function AdminsPage() {
                             <div className="form-group">
                                 <label className="form-label">Role *</label>
                                 <select className="form-select" value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}>
+                                    <option value="ADMIN">Admin</option>
                                     <option value="BRANCH_ADMIN">Branch Admin</option>
                                     <option value="SUPER_ADMIN">Super Admin</option>
                                 </select>

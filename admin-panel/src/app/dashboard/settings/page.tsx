@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { setCurrentPage } from '@/store/slices/uiSlice';
 import Link from 'next/link';
-import { Percent, Settings as SettingsIcon, User } from 'lucide-react';
+import { User } from 'lucide-react';
 
 export default function SettingsPage() {
     const dispatch = useDispatch();
@@ -19,14 +19,6 @@ export default function SettingsPage() {
 
     const settingsLinks = [
         {
-            title: 'Discount Settings',
-            description: 'Configure global discount rate and expired card rules',
-            href: '/dashboard/settings/discount',
-            icon: <Percent size={24} />,
-            color: '#16a34a',
-            bgColor: '#dcfce7',
-        },
-        {
             title: 'Profile Settings',
             description: 'Update your account information and password',
             href: '/dashboard/settings/profile',
@@ -34,21 +26,13 @@ export default function SettingsPage() {
             color: '#2563eb',
             bgColor: '#dbeafe',
         },
-        {
-            title: 'System Settings',
-            description: 'Configure system-wide preferences',
-            href: '/dashboard/settings/system',
-            icon: <SettingsIcon size={24} />,
-            color: '#6b7280',
-            bgColor: '#f3f4f6',
-        },
     ];
 
     return (
         <div className="animate-fadeIn">
             <div style={{ marginBottom: '24px' }}>
                 <h1 style={{ fontSize: '24px', fontWeight: 700 }}>Settings</h1>
-                <p style={{ color: '#6b7280', marginTop: '4px' }}>Manage system configuration</p>
+                <p style={{ color: '#6b7280', marginTop: '4px' }}>Manage your account settings</p>
             </div>
 
             <div className="grid grid-cols-3">

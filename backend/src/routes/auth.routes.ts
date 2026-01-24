@@ -221,7 +221,7 @@ router.get('/me', authMiddleware, async (req: AuthRequest, res: Response) => {
     try {
         const { id, role } = req.user!;
 
-        if (role === 'SUPER_ADMIN' || role === 'BRANCH_ADMIN') {
+        if (role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'BRANCH_ADMIN') {
             const admin = await prisma.admin.findUnique({
                 where: { id },
                 include: { lab: true }
@@ -269,7 +269,7 @@ router.post('/change-password', authMiddleware, async (req: AuthRequest, res: Re
 
         let passwordHash: string | undefined;
 
-        if (role === 'SUPER_ADMIN' || role === 'BRANCH_ADMIN') {
+        if (role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'BRANCH_ADMIN') {
             const admin = await prisma.admin.findUnique({ where: { id } });
             if (!admin || !(await bcrypt.compare(current_password, admin.password_hash))) {
                 res.status(401).json({ error: 'Current password is incorrect' });

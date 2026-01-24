@@ -208,7 +208,7 @@ export default function LabDetailPage() {
         setTestForm({ name: '', category: '', price: '', discount_percent: '0' });
     };
 
-    const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+    const canManageLabs = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
     const totalTests = Object.values(tests).flat().length;
 
     if (loading) {
@@ -301,7 +301,7 @@ export default function LabDetailPage() {
                             <p style={{ fontSize: '14px', color: '#6b7280' }}>{totalTests} tests available</p>
                         </div>
                     </div>
-                    {isSuperAdmin && (
+                    {canManageLabs && (
                         <button className="btn btn-primary" onClick={() => setShowTestModal(true)}>
                             <Plus size={18} /> Add Test
                         </button>
@@ -345,7 +345,7 @@ export default function LabDetailPage() {
                                                 Price: Rs. {test.price} | Discount: {test.discount_percent}%
                                             </p>
                                         </div>
-                                        {isSuperAdmin && (
+                                        {canManageLabs && (
                                             <div style={{ display: 'flex', gap: '8px' }}>
                                                 <button
                                                     className="btn btn-outline btn-sm"

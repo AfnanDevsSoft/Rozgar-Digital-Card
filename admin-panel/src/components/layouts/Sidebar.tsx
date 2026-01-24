@@ -17,7 +17,6 @@ import {
     Settings,
     Receipt,
     FileText,
-    Percent,
     ChevronLeft,
     ChevronRight,
 } from 'lucide-react';
@@ -33,11 +32,10 @@ const navItems: NavItem[] = [
     { name: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard size={20} /> },
     { name: 'Users', href: '/dashboard/users', icon: <Users size={20} /> },
     { name: 'Health Cards', href: '/dashboard/cards', icon: <CreditCard size={20} /> },
-    { name: 'Labs', href: '/dashboard/labs', icon: <Building2 size={20} />, roles: ['SUPER_ADMIN'] },
+    { name: 'Labs', href: '/dashboard/labs', icon: <Building2 size={20} />, roles: ['SUPER_ADMIN', 'ADMIN'] },
     { name: 'Admins', href: '/dashboard/admins', icon: <UserCog size={20} />, roles: ['SUPER_ADMIN'] },
     { name: 'Transactions', href: '/dashboard/transactions', icon: <Receipt size={20} /> },
     { name: 'Reports', href: '/dashboard/reports', icon: <FileText size={20} /> },
-    { name: 'Discount Settings', href: '/dashboard/settings/discount', icon: <Percent size={20} />, roles: ['SUPER_ADMIN'] },
     { name: 'Settings', href: '/dashboard/settings', icon: <Settings size={20} /> },
 ];
 

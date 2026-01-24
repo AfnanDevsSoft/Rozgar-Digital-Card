@@ -83,7 +83,7 @@ export interface Admin {
     id: string;
     name: string;
     email: string;
-    role: 'SUPER_ADMIN' | 'BRANCH_ADMIN';
+    role: 'SUPER_ADMIN' | 'ADMIN' | 'BRANCH_ADMIN';
     lab_id?: string;
     lab?: Lab;
     is_active: boolean;

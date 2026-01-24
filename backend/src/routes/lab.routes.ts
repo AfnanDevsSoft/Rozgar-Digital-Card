@@ -5,7 +5,7 @@
 import { Router, Response } from 'express';
 import { prisma } from '../lib/prisma.js';
 import { authMiddleware, AuthRequest } from '../middleware/auth.middleware.js';
-import { requireAdmin, requireSuperAdmin } from '../middleware/rbac.middleware.js';
+import { requireAdmin, requireSuperAdminOrAdmin } from '../middleware/rbac.middleware.js';
 import { generateLabCode } from '../services/serial.service.js';
 import { z } from 'zod';
 import { Decimal } from '@prisma/client/runtime/library';
@@ -147,7 +147,7 @@ router.get('/:id', authMiddleware, requireAdmin, async (req: AuthRequest, res: R
  * Create new lab
  * POST /api/labs
  */
-router.post('/', authMiddleware, requireSuperAdmin, async (req: AuthRequest, res: Response) => {
+router.post('/', authMiddleware, requireSuperAdminOrAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const data = createLabSchema.parse(req.body);
 
@@ -225,7 +225,7 @@ router.put('/:id', authMiddleware, requireAdmin, async (req: AuthRequest, res: R
  * Update lab status
  * PATCH /api/labs/:id/status
  */
-router.patch('/:id/status', authMiddleware, requireSuperAdmin, async (req: AuthRequest, res: Response) => {
+router.patch('/:id/status', authMiddleware, requireSuperAdminOrAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const { status } = req.body;
 

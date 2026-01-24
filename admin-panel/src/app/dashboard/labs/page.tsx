@@ -67,7 +67,7 @@ export default function LabsPage() {
         }
     };
 
-    const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+    const canManageLabs = user?.role === 'SUPER_ADMIN' || user?.role === 'ADMIN';
 
     return (
         <div className="animate-fadeIn">
@@ -76,7 +76,7 @@ export default function LabsPage() {
                     <h1 style={{ fontSize: '24px', fontWeight: 700 }}>Labs Management</h1>
                     <p style={{ color: '#6b7280', marginTop: '4px' }}>Manage partner laboratories</p>
                 </div>
-                {isSuperAdmin && (
+                {canManageLabs && (
                     <button className="btn btn-primary" onClick={() => setShowModal(true)}>
                         <Plus size={18} />
                         Add Lab
@@ -154,7 +154,7 @@ export default function LabsPage() {
                                     >
                                         <Eye size={14} /> View
                                     </button>
-                                    {isSuperAdmin && (
+                                    {canManageLabs && (
                                         <>
                                             {lab.status === 'ACTIVE' ? (
                                                 <button className="btn btn-danger btn-sm" onClick={() => handleStatusChange(lab, 'SUSPENDED')}>

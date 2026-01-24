@@ -16,7 +16,7 @@ const createAdminSchema = z.object({
     name: z.string().min(2),
     email: z.string().email(),
     password: z.string().min(6).optional(),
-    role: z.enum(['SUPER_ADMIN', 'BRANCH_ADMIN']),
+    role: z.enum(['SUPER_ADMIN', 'ADMIN', 'BRANCH_ADMIN']),
     lab_id: z.string().optional()
 });
 
@@ -89,7 +89,7 @@ router.post('/', authMiddleware, requireSuperAdmin, async (req: AuthRequest, res
             return;
         }
 
-        // If BRANCH_ADMIN, lab_id is required
+        // If BRANCH_ADMIN, lab_id is required (ADMIN and SUPER_ADMIN don't need lab_id)
         if (data.role === 'BRANCH_ADMIN' && !data.lab_id) {
             res.status(400).json({ error: 'Lab ID is required for Branch Admin' });
             return;
@@ -115,7 +115,7 @@ router.post('/', authMiddleware, requireSuperAdmin, async (req: AuthRequest, res
                 email: data.email,
                 password_hash: passwordHash,
                 role: data.role,
-                lab_id: data.role === 'SUPER_ADMIN' ? null : (data.lab_id || null),
+                lab_id: data.role === 'BRANCH_ADMIN' ? (data.lab_id || null) : null,
                 must_change_password: !data.password // If no password provided, force change
             },
             include: { lab: true }

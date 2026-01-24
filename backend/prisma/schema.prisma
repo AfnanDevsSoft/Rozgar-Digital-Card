@@ -12,6 +12,7 @@ datasource db {
 // Enums
 enum Role {
   SUPER_ADMIN
+  ADMIN
   BRANCH_ADMIN
   RECEPTIONIST
   USER
