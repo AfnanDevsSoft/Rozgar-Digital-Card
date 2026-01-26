@@ -38,12 +38,6 @@ app.use(helmet({
 }));
 app.use(cors({
     origin: [
-        'https://shifaadmin.afnandevs.com',
-        'https://shifaclients.afnandevs.com',
-        'https://shifalabs.afnandevs.com',
-        'https://new.afnandevs.com',
-        'https://new1.afnandevs.com',
-        'https://new2.afnandevs.com',
         'https://new3.afnandevs.com',
         'https://panel.shifasahulatcard.com',
         'https://labs.shifasahulatcard.com',
@@ -52,6 +46,9 @@ app.use(cors({
         'http://localhost:3002',
         'http://localhost:3003',
         'https://backend.bdmatrix.org',
+        'https://admin.bdmatrix.org',
+        'https://user.bdmatrix.org',
+        'https://lab.bdmatrix.org',
     ],
     credentials: true,
 }));
